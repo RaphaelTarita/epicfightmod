@@ -23,7 +23,7 @@ public class Colliders {
 	public static Collider endermanStick = new ColliderOBB(0.4F, 0.8F, 0.4F, 0F, 0F, 0F);
 	public static Collider golemSmashDown = new ColliderOBB(0.5F, 0.25F, 0.5F, 0F, -0.75F, 0F);
 	public static Collider golemSwingArm = new ColliderOBB(0.6F, 0.9F, 0.6F, 0F, 0F, 0F);
-	public static Collider shadowboxing = new ColliderOBB(0.4F, 0.4F, 0.5F, 0F, 1.0F, -0.85F);
+	public static Collider fist_fast = new ColliderOBB(0.4F, 0.4F, 0.5F, 0F, 1.0F, -0.85F);
 	
 	public static void update() {/**
 		Collider newCOllider = new ColliderOBB(0.4F, 0.4F, 0.9F, 0F, 0F, -1.35F);

@@ -52,7 +52,6 @@ import maninhouse.epicfight.client.renderer.item.RenderItemBase;
 import maninhouse.epicfight.client.renderer.item.RenderKatana;
 import maninhouse.epicfight.client.renderer.item.RenderShield;
 import maninhouse.epicfight.client.renderer.item.RenderTrident;
-import maninhouse.epicfight.config.ConfigurationIngame;
 import maninhouse.epicfight.item.ModItems;
 import maninhouse.epicfight.main.EpicFightMod;
 import maninhouse.epicfight.utils.game.Formulars;
@@ -311,7 +310,7 @@ public class RenderEngine {
 				if (livingentity instanceof ClientPlayerEntity) {
 					if (event.getPartialRenderTick() == 1.0F) {
 						return;
-					} else if (!ClientEngine.INSTANCE.isBattleMode() && EpicFightMod.INGAME_CONFIG.filterAnimation.getValue()) {
+					} else if (!ClientEngine.INSTANCE.isBattleMode() && EpicFightMod.CLIENT_INGAME_CONFIG.filterAnimation.getValue()) {
 						return;
 					}
 				}
@@ -336,19 +335,21 @@ public class RenderEngine {
 		public static void itemTooltip(ItemTooltipEvent event) {
 			if (event.getPlayer() != null) {
 				CapabilityItem cap = ModCapabilities.stackCapabilityGetter(event.getItemStack());
+				ClientPlayerData playerCap = (ClientPlayerData) event.getPlayer().getCapability(ModCapabilities.CAPABILITY_ENTITY, null).orElse(null);
 				
 				if (cap != null && ClientEngine.INSTANCE.getPlayerData() != null) {
 					if (ClientEngine.INSTANCE.inputController.isKeyDown(ModKeys.SPECIAL_ATTACK_TOOLTIP)) {
 						if (cap.getSpecialAttack(ClientEngine.INSTANCE.getPlayerData()) != null) {
 							event.getToolTip().clear();
+							List<ITextComponent> skilltooltip = cap.getSpecialAttack(ClientEngine.INSTANCE.getPlayerData()).getTooltipOnItem(event.getItemStack(), cap, playerCap);
 							
-							for (ITextComponent s : cap.getSpecialAttack(ClientEngine.INSTANCE.getPlayerData()).getTooltip()) {
+							for (ITextComponent s : skilltooltip) {
 								event.getToolTip().add(s);
 							}
 						}
 					} else {
 						List<ITextComponent> tooltip = event.getToolTip();
-						cap.modifyItemTooltip(event.getToolTip(), event.getPlayer().getHeldItemOffhand().isEmpty());
+						cap.modifyItemTooltip(event.getToolTip(), playerCap);
 						
 						for (int i = 0; i < tooltip.size(); i++) {
 							ITextComponent textComp = tooltip.get(i);
@@ -360,14 +361,13 @@ public class RenderEngine {
 									if (translationComponent.getFormatArgs().length > 1 &&
 											translationComponent.getFormatArgs()[1] instanceof TranslationTextComponent) {
 										if(((TranslationTextComponent)translationComponent.getFormatArgs()[1]).getKey().equals(Attributes.ATTACK_SPEED.getAttributeName())) {
-											ClientPlayerData entityCap = (ClientPlayerData) event.getPlayer().getCapability(ModCapabilities.CAPABILITY_ENTITY, null).orElse(null);
-											double weaponSpeed = entityCap.getOriginalEntity().getAttribute(Attributes.ATTACK_SPEED).getBaseValue();
+											double weaponSpeed = playerCap.getOriginalEntity().getAttribute(Attributes.ATTACK_SPEED).getBaseValue();
 											
 											for (AttributeModifier modifier : event.getItemStack().getAttributeModifiers(EquipmentSlotType.MAINHAND).get(Attributes.ATTACK_SPEED)) {
 												weaponSpeed += modifier.getAmount();
 											}
 											
-											double attackSpeedPanelty = Formulars.getAttackSpeedPanelty(entityCap.getWeight(), weaponSpeed);
+											double attackSpeedPanelty = Formulars.getAttackSpeedPenalty(playerCap.getWeight(), weaponSpeed, playerCap);
 											weaponSpeed += attackSpeedPanelty;
 											tooltip.remove(i);
 											tooltip.add(i, new StringTextComponent(String.format(" %.2f ", weaponSpeed))
@@ -419,12 +419,11 @@ public class RenderEngine {
 		public static void renderHand(RenderHandEvent event) {
 			boolean isBattleMode = ClientEngine.INSTANCE.isBattleMode();
 			
-			if(event.getHand() == Hand.MAIN_HAND && isBattleMode) {
-				renderEngine.firstPersonRenderer.render(Minecraft.getInstance().player, ClientEngine.INSTANCE.getPlayerData(), null, event.getBuffers(),
-						event.getMatrixStack(), event.getLight(), event.getPartialTicks());
-			}
-			
 			if(isBattleMode) {
+				if (event.getHand() == Hand.MAIN_HAND) {
+					renderEngine.firstPersonRenderer.render(Minecraft.getInstance().player, ClientEngine.INSTANCE.getPlayerData(), null, event.getBuffers(),
+							event.getMatrixStack(), event.getLight(), event.getPartialTicks());
+				}
 				event.setCanceled(true);
 			}
 		}

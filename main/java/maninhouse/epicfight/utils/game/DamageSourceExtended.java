@@ -5,16 +5,14 @@ import maninhouse.epicfight.capabilities.entity.LivingData;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.EntityDamageSource;
 
-public class DamageSourceExtended extends EntityDamageSource implements IExtendedDamageSource
-{
+public class DamageSourceExtended extends EntityDamageSource implements IExtendedDamageSource {
 	private float impact;
-	private float armorIgnore;
+	private float armorNegation;
 	private StunType stunType;
 	private DamageType damageType;
 	private final int id;
 	
-	public DamageSourceExtended(String damageTypeIn, Entity damageSourceEntityIn, StunType stunType, DamageType damageType, int id)
-	{
+	public DamageSourceExtended(String damageTypeIn, Entity damageSourceEntityIn, StunType stunType, DamageType damageType, int id) {
 		super(damageTypeIn, damageSourceEntityIn);
 		
 		LivingData<?> entityCap = (LivingData<?>) damageSourceEntityIn.getCapability(ModCapabilities.CAPABILITY_ENTITY, null).orElse(null);
@@ -22,67 +20,57 @@ public class DamageSourceExtended extends EntityDamageSource implements IExtende
 		this.stunType = stunType;
 		this.damageType = damageType;
 		this.impact = entityCap.getImpact();
-		this.armorIgnore = (float) entityCap.getDefenceIgnore();
+		this.armorNegation = entityCap.getArmorNegation();
 		this.id = id;
 	}
 	
 	@Override
-	public void setImpact(float amount)
-	{
+	public void setImpact(float amount) {
 		this.impact = amount;
 	}
-	
+
 	@Override
-	public void setArmorIgnore(float amount)
-	{
-		this.armorIgnore = amount;
+	public void setArmorNegation(float amount) {
+		this.armorNegation = amount;
 	}
-	
+
 	@Override
-	public void setStunType(StunType stunType)
-	{
+	public void setStunType(StunType stunType) {
 		this.stunType = stunType;
 	}
-	
+
 	@Override
-	public float getImpact()
-	{
+	public float getImpact() {
 		return impact;
 	}
-	
+
 	@Override
-	public float getArmorIgnoreRatio()
-	{
-		return armorIgnore * 0.01F;
+	public float getArmorNegation() {
+		return armorNegation;
 	}
-	
+
 	@Override
-	public StunType getStunType()
-	{
+	public StunType getStunType() {
 		return stunType;
 	}
-	
+
 	@Override
-	public DamageType getExtDamageType()
-	{
+	public DamageType getExtDamageType() {
 		return damageType;
 	}
-	
+
 	@Override
-	public Entity getOwner()
-	{
+	public Entity getOwner() {
 		return super.getTrueSource();
 	}
 
 	@Override
-	public String getType()
-	{
+	public String getType() {
 		return super.damageType;
 	}
 
 	@Override
-	public int getSkillId()
-	{
+	public int getSkillId() {
 		return this.id;
 	}
 }

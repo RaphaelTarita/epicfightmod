@@ -18,6 +18,6 @@ public class Particles
 	public static final RegistryObject<HitParticleType> FLASH = PARTICLES.register("flash", ()->new HitParticleType(true));
 	public static final RegistryObject<HitParticleType> PORTAL_STRAIGHT = PARTICLES.register("portal_straight", ()->new HitParticleType(true));
 	public static final RegistryObject<HitParticleType> HIT_BLUNT = PARTICLES.register("blunt", ()->new HitParticleType(true));
-	public static final RegistryObject<HitParticleType> HIT_CUT = PARTICLES.register("hit_cut", ()->new HitParticleType(true));
+	public static final RegistryObject<HitParticleType> HIT_BLADE = PARTICLES.register("hit_cut", ()->new HitParticleType(true));
 	public static final RegistryObject<HitParticleType> PARRY = PARTICLES.register("parry", ()->new HitParticleType(true));
 }

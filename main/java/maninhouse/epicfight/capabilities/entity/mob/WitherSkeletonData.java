@@ -17,6 +17,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.monster.WitherSkeletonEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
+import net.minecraft.util.Hand;
 
 public class WitherSkeletonData extends SkeletonData<WitherSkeletonEntity> {
 	public WitherSkeletonData() {
@@ -24,13 +25,9 @@ public class WitherSkeletonData extends SkeletonData<WitherSkeletonEntity> {
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(WitherSkeletonEntity entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			this.orgEntity.getDataManager().set(DataKeys.STUN_ARMOR, 4.0F);
-			return true;
-		} else {
-			return false;
-		}
+	public void onEntityJoinWorld(WitherSkeletonEntity entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		this.orgEntity.getDataManager().set(DataKeys.STUN_ARMOR, 4.0F);
 	}
 	
 	@Override
@@ -61,8 +58,8 @@ public class WitherSkeletonData extends SkeletonData<WitherSkeletonEntity> {
 	}
 	
 	@Override
-	public boolean hurtEntity(Entity hitTarget, IExtendedDamageSource source, float amount) {
-		boolean succed = super.hurtEntity(hitTarget, source, amount);
+	public boolean hurtEntity(Entity hitTarget, Hand handIn, IExtendedDamageSource source, float amount) {
+		boolean succed = super.hurtEntity(hitTarget, handIn, source, amount);
 		if (succed && hitTarget instanceof LivingEntity && this.orgEntity.getRNG().nextInt(10) == 0) {
             ((LivingEntity)hitTarget).addPotionEffect(new EffectInstance(Effects.WITHER, 200));
         }

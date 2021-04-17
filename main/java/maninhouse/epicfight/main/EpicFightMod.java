@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import maninhouse.epicfight.capabilities.ModCapabilities;
 import maninhouse.epicfight.capabilities.ProviderEntity;
 import maninhouse.epicfight.capabilities.ProviderItem;
+import maninhouse.epicfight.capabilities.ProviderProjectile;
 import maninhouse.epicfight.client.ClientEngine;
 import maninhouse.epicfight.client.events.ClientEvents;
 import maninhouse.epicfight.client.events.RegistryClientEvent;
@@ -27,6 +28,7 @@ import maninhouse.epicfight.gamedata.Skills;
 import maninhouse.epicfight.item.ModItems;
 import maninhouse.epicfight.network.ModNetworkManager;
 import maninhouse.epicfight.particle.Particles;
+import maninhouse.epicfight.world.ModGamerules;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -45,7 +47,7 @@ public class EpicFightMod {
 	public static final String MODID = "epicfight";
 	public static final String CONFIG_FILE_PATH = EpicFightMod.MODID + ".toml";
 	public static final Logger LOGGER = LogManager.getLogger(MODID);
-	public static ConfigurationIngame INGAME_CONFIG;
+	public static ConfigurationIngame CLIENT_INGAME_CONFIG;
 	
     public EpicFightMod() {
     	ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigManager.COMMON_CONFIG, CONFIG_FILE_PATH);
@@ -59,7 +61,6 @@ public class EpicFightMod {
     	}
     	
     	Animations.registerAnimations(FMLEnvironment.dist);
-    	
     	Skills.init();
     	IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
     	bus.addListener(this::doClientStuff);
@@ -92,6 +93,8 @@ public class EpicFightMod {
         MinecraftForge.EVENT_BUS.register(RenderEngine.Events.class);
         MinecraftForge.EVENT_BUS.register(RegistryClientEvent.class);
         MinecraftForge.EVENT_BUS.register(ClientEvents.class);
+        
+        CLIENT_INGAME_CONFIG = new ConfigurationIngame();
     }
     
 	private void doCommonStuff(final FMLCommonSetupEvent event) {
@@ -99,8 +102,8 @@ public class EpicFightMod {
     	ModNetworkManager.registerPackets();
     	ProviderItem.makeMap();
     	ProviderEntity.makeMap();
-    	//ModAttributes.addVanillaMobAttributeMap();
-    	INGAME_CONFIG = new ConfigurationIngame();
+    	ProviderProjectile.makeMap();
+    	ModGamerules.registerRules();
     }
 	
 	public static boolean isPhysicalClient() {

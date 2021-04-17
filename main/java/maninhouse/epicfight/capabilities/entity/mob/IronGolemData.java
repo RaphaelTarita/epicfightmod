@@ -31,37 +31,34 @@ public class IronGolemData extends BipedMobData<IronGolemEntity> {
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(IronGolemEntity entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			Set<PrioritizedGoal> goals = this.orgEntity.goalSelector.goals;
-			Iterator<PrioritizedGoal> iterator = goals.iterator();
-			Goal toRemove = null;
+	public void onEntityJoinWorld(IronGolemEntity entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		Set<PrioritizedGoal> goals = this.orgEntity.goalSelector.goals;
+		Iterator<PrioritizedGoal> iterator = goals.iterator();
+		Goal toRemove = null;
+		
+		while (iterator.hasNext()) {
+			PrioritizedGoal goal = iterator.next();
+			Goal inner = goal.getGoal();
 
-			while (iterator.hasNext()) {
-				PrioritizedGoal goal = iterator.next();
-				Goal inner = goal.getGoal();
-
-				if (inner instanceof MoveTowardsTargetGoal) {
-					toRemove = inner;
-					break;
-				}
+			if (inner instanceof MoveTowardsTargetGoal) {
+				toRemove = inner;
+				break;
 			}
-
-			if (toRemove != null)
-				orgEntity.goalSelector.removeGoal(toRemove);
-
-			this.orgEntity.entityCollisionReduction = 0.2F;
-			return true;
-		} else {
-			return false;
 		}
+
+		if (toRemove != null) {
+			orgEntity.goalSelector.removeGoal(toRemove);
+		}
+
+		this.orgEntity.entityCollisionReduction = 0.2F;
 	}
 	
 	@Override
 	protected void initAttributes()
 	{
 		super.initAttributes();
-		this.orgEntity.getAttribute(ModAttributes.HIT_AT_ONCE.get()).setBaseValue(4.0D);
+		this.orgEntity.getAttribute(ModAttributes.MAX_STRIKES.get()).setBaseValue(4.0D);
 		this.orgEntity.getAttribute(ModAttributes.IMPACT.get()).setBaseValue(10.0D);
 	}
 	

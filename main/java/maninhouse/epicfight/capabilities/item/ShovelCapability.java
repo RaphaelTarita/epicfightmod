@@ -2,6 +2,8 @@ package maninhouse.epicfight.capabilities.item;
 
 import java.util.List;
 
+import com.mojang.datafixers.util.Pair;
+
 import maninhouse.epicfight.animation.types.StaticAnimation;
 import maninhouse.epicfight.capabilities.entity.player.PlayerData;
 import maninhouse.epicfight.entity.ai.attribute.ModAttributes;
@@ -20,8 +22,8 @@ public class ShovelCapability extends MaterialItemCapability {
 	
 	@Override
 	protected void registerAttribute() {
-		double impact = itemTier.getHarvestLevel() * 0.5D + 1.5D;
-		oneHandedStyleDamageAttribute.put(ModAttributes.IMPACT, ModAttributes.getImpactModifier(impact));
+		double impact = this.itemTier.getHarvestLevel() * 0.4D + 0.8D;
+		this.addStyleAttibute(WieldStyle.ONE_HAND, Pair.of(ModAttributes.IMPACT, ModAttributes.getImpactModifier(impact)));
 	}
 	
 	@Override

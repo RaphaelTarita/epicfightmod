@@ -3,7 +3,10 @@ package maninhouse.epicfight.capabilities.item;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mojang.datafixers.util.Pair;
+
 import maninhouse.epicfight.animation.types.StaticAnimation;
+import maninhouse.epicfight.capabilities.entity.LivingData;
 import maninhouse.epicfight.capabilities.entity.player.PlayerData;
 import maninhouse.epicfight.entity.ai.attribute.ModAttributes;
 import maninhouse.epicfight.gamedata.Animations;
@@ -15,55 +18,62 @@ import maninhouse.epicfight.physics.Collider;
 import net.minecraft.item.Item;
 import net.minecraft.util.SoundEvent;
 
-public class TridentCapability extends RangedWeaponCapability
-{
+public class TridentCapability extends RangedWeaponCapability {
 	private static List<StaticAnimation> attackMotion;
+	private static List<StaticAnimation> mountAttackMotion;
 	
-	public TridentCapability(Item item)
-	{
+	public TridentCapability(Item item) {
 		super(item, null, Animations.BIPED_JAVELIN_AIM, Animations.BIPED_JAVELIN_REBOUND);
-		
-		if(attackMotion == null)
-		{
+
+		if (attackMotion == null) {
 			attackMotion = new ArrayList<StaticAnimation> ();
 			attackMotion.add(Animations.SPEAR_ONEHAND_AUTO);
 			attackMotion.add(Animations.SPEAR_DASH);
 		}
+		
+		if (mountAttackMotion == null) {
+			mountAttackMotion = new ArrayList<StaticAnimation> ();
+			mountAttackMotion.add(Animations.SPEAR_MOUNT_ATTACK);
+		}
 	}
 	
 	@Override
-	protected void registerAttribute()
-	{
-		oneHandedStyleDamageAttribute.put(ModAttributes.IMPACT, ModAttributes.getImpactModifier(2.25D));
+	public WieldStyle getStyle(LivingData<?> entitydata) {
+		return WieldStyle.ONE_HAND;
 	}
 	
 	@Override
-	public SoundEvent getHitSound()
-	{
+	protected void registerAttribute() {
+		this.addStyleAttibute(WieldStyle.ONE_HAND, Pair.of(ModAttributes.IMPACT, ModAttributes.getImpactModifier(2.25D)));
+	}
+	
+	@Override
+	public SoundEvent getHitSound() {
 		return Sounds.BLADE_HIT;
 	}
 	
 	@Override
-	public HitParticleType getHitParticle()
-	{
-		return Particles.HIT_CUT.get();
+	public HitParticleType getHitParticle() {
+		return Particles.HIT_BLADE.get();
 	}
-	
+
 	@Override
-	public Collider getWeaponCollider()
-	{
+	public Collider getWeaponCollider() {
 		return Colliders.spearNarrow;
 	}
 	
 	@Override
-	public List<StaticAnimation> getAutoAttckMotion(PlayerData<?> playerdata)
-	{
+	public List<StaticAnimation> getAutoAttckMotion(PlayerData<?> playerdata) {
 		return attackMotion;
 	}
 	
 	@Override
-	public boolean canUsedOffhand()
-	{
-		return false;
+	public List<StaticAnimation> getMountAttackMotion() {
+		return mountAttackMotion;
+	}
+	
+	@Override
+	public final HandProperty getHandProperty() {
+		return HandProperty.MAINHAND_ONLY;
 	}
 }

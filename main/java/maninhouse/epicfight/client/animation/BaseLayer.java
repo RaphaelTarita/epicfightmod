@@ -44,14 +44,13 @@ public class BaseLayer {
 		nextAnimation.getLinkAnimation(currentPose, timeModifier, entitydata, this.linkAnimation);
 	}
 	
-	public void update(LivingData<?> entitydata, boolean reversePlay) {
+	public void update(LivingData<?> entitydata) {
 		if (pause) {
 			this.animationPlayer.setElapsedTime(this.animationPlayer.getElapsedTime());
 			return;
 		}
 		
 		float frameTime = ConfigurationIngame.A_TICK * this.animationPlayer.getPlay().getPlaySpeed(entitydata);
-		frameTime = reversePlay ? -frameTime : frameTime;
 		
 		this.animationPlayer.update(frameTime);
 		this.animationPlayer.getPlay().onUpdate(entitydata);

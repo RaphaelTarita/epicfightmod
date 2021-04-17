@@ -13,10 +13,15 @@ public abstract class Animator {
 	public abstract void update();
 	public abstract void onEntityDeath();
 	public abstract AnimationPlayer getPlayer();
+	public abstract void reserveAnimation(StaticAnimation nextAnimation);
 	/**
-	 * Use this if you don't know what layer you want to get(only effective in client animator)
+	 * Use this if you don't know which layer you want to get(only effective in client animator)
 	 */
 	public abstract AnimationPlayer getPlayerFor(StaticAnimation animation);
+	
+	public boolean isReverse() {
+		return false;
+	}
 	
 	public void playDeathAnimation() {
 		this.playAnimation(Animations.BIPED_DEATH, 0);

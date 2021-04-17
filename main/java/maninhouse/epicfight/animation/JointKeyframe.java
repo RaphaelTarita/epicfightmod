@@ -1,23 +1,19 @@
 package maninhouse.epicfight.animation;
 
-public class JointKeyframe
-{
+public class JointKeyframe {
 	private final float timeStamp;
 	private final JointTransform transform;
-	
-	public JointKeyframe(float timeStamp, JointTransform trasnform)
-	{
+
+	public JointKeyframe(float timeStamp, JointTransform trasnform) {
 		this.timeStamp = timeStamp;
 		this.transform = trasnform;
 	}
 
-	public float getTimeStamp()
-	{
+	public float getTimeStamp() {
 		return timeStamp;
 	}
 
-	public JointTransform getTransform()
-	{
+	public JointTransform getTransform() {
 		return transform;
 	}
 }

@@ -8,12 +8,17 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import maninhouse.epicfight.animation.JointTransform;
+import maninhouse.epicfight.animation.Pose;
+import maninhouse.epicfight.animation.Quaternion;
+import maninhouse.epicfight.animation.property.Property.AnimationProperty;
+import maninhouse.epicfight.animation.property.Property.DamageProperty;
 import maninhouse.epicfight.animation.types.ActionAnimation;
-import maninhouse.epicfight.animation.types.AnimationProperty;
 import maninhouse.epicfight.capabilities.entity.LivingData;
 import maninhouse.epicfight.capabilities.entity.MobData;
 import maninhouse.epicfight.capabilities.entity.mob.BipedMobData;
 import maninhouse.epicfight.capabilities.entity.player.PlayerData;
+import maninhouse.epicfight.entity.event.EntityEventListener.EventType;
 import maninhouse.epicfight.gamedata.Models;
 import maninhouse.epicfight.particle.HitParticleType;
 import maninhouse.epicfight.physics.Collider;
@@ -21,6 +26,7 @@ import maninhouse.epicfight.utils.game.AttackResult;
 import maninhouse.epicfight.utils.game.IExtendedDamageSource;
 import maninhouse.epicfight.utils.game.IExtendedDamageSource.DamageType;
 import maninhouse.epicfight.utils.game.IExtendedDamageSource.StunType;
+import maninhouse.epicfight.utils.math.Vec3f;
 import maninhouse.epicfight.utils.math.VisibleMatrix4f;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -31,11 +37,12 @@ import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.entity.PartEntity;
 import net.minecraftforge.fml.RegistryObject;
 
 public class AttackAnimation extends ActionAnimation {
 	protected final Map<AnimationProperty<?>, Object> properties;
-	protected final Phase[] phases;
+	public final Phase[] phases;
 	
 	public AttackAnimation(int id, float convertTime, float antic, float preDelay, float contact, float recovery, boolean affectY, @Nullable Collider collider,
 			String index, String path) {
@@ -54,14 +61,15 @@ public class AttackAnimation extends ActionAnimation {
 	}
 	
 	@Override
-	public void onUpdate(LivingData<?> entitydata)
-	{
+	public void onUpdate(LivingData<?> entitydata) {
 		super.onUpdate(entitydata);
 		
-		if(!entitydata.isRemote()) {
+		if (!entitydata.isRemote()) {
 			float elapsedTime = entitydata.getAnimator().getPlayer().getElapsedTime();
+			float prevElapsedTime = entitydata.getAnimator().getPlayer().getPrevElapsedTime();
 			LivingData.EntityState state = this.getState(elapsedTime);
-			Phase phase = this.getCurrentPhase(elapsedTime);
+			LivingData.EntityState prevState = this.getState(prevElapsedTime);
+			Phase phase = this.getPhaseByTime(elapsedTime);
 			if(state == LivingData.EntityState.FREE_CAMERA) {
 				if(entitydata instanceof MobData) {
 					((MobEntity) entitydata.getOriginalEntity()).getNavigator().clearPath();
@@ -70,9 +78,9 @@ public class AttackAnimation extends ActionAnimation {
 						entitydata.rotateTo(target, 60.0F, false);
 					}
 				}
-			} else if(state.shouldDetectCollision()) {
-				if(!this.getState(entitydata.getAnimator().getPlayer().getPrevElapsedTime()).shouldDetectCollision()) {
-					entitydata.playSound(this.getSwingSound(entitydata, phase.hand), 0.0F, 0.0F);
+			} else if (state.shouldDetectCollision() || (prevState.getLevel() < 2 && state.getLevel() > 2)) {
+				if(!prevState.shouldDetectCollision()) {
+					entitydata.playSound(this.getSwingSound(entitydata, phase), 0.0F, 0.0F);
 					entitydata.currentlyAttackedEntity.clear();
 				}
 				
@@ -86,25 +94,28 @@ public class AttackAnimation extends ActionAnimation {
 				
 				if (list.size() > 0) {
 					AttackResult attackResult = new AttackResult(entity, list);
-					int i = 0;
-					while (entitydata.currentlyAttackedEntity.size() < getHitEnemies(entitydata)) {
+					boolean flag1 = true;
+					int maxStrikes = this.getMaxStrikes(entitydata, phase);
+					while (entitydata.currentlyAttackedEntity.size() < maxStrikes) {
 						Entity e = attackResult.getEntity();
-						if (!entitydata.currentlyAttackedEntity.contains(e) && !entitydata.isTeam(e)) {
-							if (e instanceof LivingEntity) {
+						Entity trueEntity = this.getTrueEntity(e);
+						if (!entitydata.currentlyAttackedEntity.contains(trueEntity) && !entitydata.isTeam(e)) {
+							if (e instanceof LivingEntity || e instanceof PartEntity) {
 								if(entity.world.rayTraceBlocks(new RayTraceContext(new Vector3d(e.getPosX(), e.getPosY() + (double)e.getEyeHeight(), e.getPosZ()),
 										new Vector3d(entity.getPosX(), entity.getPosY() + entity.getHeight() * 0.5F, entity.getPosZ()), 
 										RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, entity)).getType() == RayTraceResult.Type.MISS) {
-									IExtendedDamageSource source = this.getDamageSourceExt(entitydata, e);
-									if(entitydata.hurtEntity(e, source, this.getDamageAmount(entitydata, e, phase.hand))) {
-										entity.setLastAttackedEntity(e);
+									
+									IExtendedDamageSource source = this.getDamageSourceExt(entitydata, e, phase);
+									if(entitydata.hurtEntity(e, phase.hand, source, this.getDamageAmount(entitydata, e, phase))) {
 										e.hurtResistantTime = 0;
-										e.world.playSound(null, e.getPosX(), e.getPosY(), e.getPosZ(), this.getHitSound(entitydata, phase.hand), e.getSoundCategory(), 1.0F, 1.0F);
-										this.spawnHitParticle(((ServerWorld)e.world), entitydata, e, phase.hand);
-										if(i == 0 && entitydata instanceof PlayerData)
-											entitydata.getOriginalEntity().getHeldItem(phase.hand).hitEntity((LivingEntity)e, ((PlayerData<?>)entitydata).getOriginalEntity());
-										i++;
+										e.world.playSound(null, e.getPosX(), e.getPosY(), e.getPosZ(), this.getHitSound(entitydata, phase), e.getSoundCategory(), 1.0F, 1.0F);
+										this.spawnHitParticle(((ServerWorld)e.world), entitydata, e, phase);
+										if(flag1 && entitydata instanceof PlayerData && trueEntity instanceof LivingEntity) {
+											entitydata.getOriginalEntity().getHeldItem(phase.hand).hitEntity((LivingEntity)trueEntity, ((PlayerData<?>)entitydata).getOriginalEntity());
+											flag1 = false;
+										}
 									}
-									entitydata.currentlyAttackedEntity.add(e);
+									entitydata.currentlyAttackedEntity.add(trueEntity);
 								}
 							}
 						}
@@ -121,6 +132,11 @@ public class AttackAnimation extends ActionAnimation {
 	@Override
 	public void onFinish(LivingData<?> entitydata, boolean isEnd) {
 		super.onFinish(entitydata, isEnd);
+		
+		if(entitydata instanceof PlayerData) {
+			((PlayerData<?>)entitydata).getEventListener().activateEvents(EventType.ON_ATTACK_END_EVENT, entitydata.currentlyAttackedEntity.size(), this.getId());
+		}
+		
 		entitydata.currentlyAttackedEntity.clear();
 		
 		if(entitydata instanceof BipedMobData && entitydata.isRemote()) {
@@ -132,7 +148,7 @@ public class AttackAnimation extends ActionAnimation {
 	
 	@Override
 	public LivingData.EntityState getState(float time) {
-		Phase phase = this.getCurrentPhase(time);
+		Phase phase = this.getPhaseByTime(time);
 		boolean lockCameraRotation = this.getProperty(AnimationProperty.LOCK_ROTATION).orElse(false);
 		
 		if(phase.antic >= time)
@@ -148,76 +164,109 @@ public class AttackAnimation extends ActionAnimation {
 	}
 	
 	public Collider getCollider(LivingData<?> entitydata, float elapsedTime) {
-		Phase phase = this.getCurrentPhase(elapsedTime);
+		Phase phase = this.getPhaseByTime(elapsedTime);
 		return phase.collider != null ? phase.collider : entitydata.getColliderMatching(phase.hand);
 	}
 	
-	protected int getHitEnemies(LivingData<?> entitydata) {
-		return this.getProperty(AnimationProperty.HIT_AT_ONCE).orElse(entitydata.getHitEnemies());
+	public Entity getTrueEntity(Entity entity) {
+		if (entity instanceof PartEntity) {
+			return ((PartEntity<?>)entity).getParent();
+		}
+		
+		return entity;
 	}
 	
-	protected float getDamageAmount(LivingData<?> entitydata, Entity target, Hand hand) {
-		float multiplier = this.getProperty(AnimationProperty.DAMAGE_MULTIPLIER).orElse(1.0F);
-		float adder = this.getProperty(AnimationProperty.DAMAGE_ADDER).orElse(0.0F);
-		return entitydata.getDamageToEntity(target, hand) * multiplier + adder;
+	protected int getMaxStrikes(LivingData<?> entitydata, Phase phase) {
+		int i = entitydata.getHitEnemies();
+		phase.getProperty(DamageProperty.MAX_STRIKES).ifPresent((opt)->opt.get(i));
+		
+		return i;
 	}
 	
-	protected SoundEvent getSwingSound(LivingData<?> entitydata, Hand hand) {
-		return this.getProperty(AnimationProperty.SWING_SOUND).orElse(entitydata.getSwingSound(hand));
+	protected float getDamageAmount(LivingData<?> entitydata, Entity target, Phase phase) {
+		float f = entitydata.getDamageToEntity(target, phase.hand);
+		phase.getProperty(DamageProperty.DAMAGE).ifPresent((opt)->opt.get(f));
+		return f;
 	}
 	
-	protected SoundEvent getHitSound(LivingData<?> entitydata, Hand hand) {
-		return this.getProperty(AnimationProperty.HIT_SOUND).orElse(entitydata.getWeaponHitSound(hand));
+	protected SoundEvent getSwingSound(LivingData<?> entitydata, Phase phase) {
+		return phase.getProperty(DamageProperty.SWING_SOUND).orElse(entitydata.getSwingSound(phase.hand));
 	}
 	
-	protected IExtendedDamageSource getDamageSourceExt(LivingData<?> entitydata, Entity target) {
-		DamageType dmgType = this.getProperty(AnimationProperty.DAMAGE_TYPE).orElse(DamageType.PHYSICAL);
-		StunType stunType = this.getProperty(AnimationProperty.STUN_TYPE).orElse(StunType.SHORT);
+	protected SoundEvent getHitSound(LivingData<?> entitydata, Phase phase) {
+		return phase.getProperty(DamageProperty.HIT_SOUND).orElse(entitydata.getWeaponHitSound(phase.hand));
+	}
+	
+	protected IExtendedDamageSource getDamageSourceExt(LivingData<?> entitydata, Entity target, Phase phase) {
+		DamageType dmgType = phase.getProperty(DamageProperty.DAMAGE_TYPE).orElse(DamageType.PHYSICAL);
+		StunType stunType = phase.getProperty(DamageProperty.STUN_TYPE).orElse(StunType.SHORT);
 		IExtendedDamageSource extDmgSource = entitydata.getDamageSource(stunType, dmgType, this.getId());
 		
-		this.getProperty(AnimationProperty.ARMOR_NEGATION).ifPresent((opt) -> {
-			extDmgSource.setArmorIgnore(opt);
+		phase.getProperty(DamageProperty.ARMOR_NEGATION).ifPresent((opt) -> {
+			extDmgSource.setArmorNegation(opt.get(extDmgSource.getArmorNegation()));
 		});
-		this.getProperty(AnimationProperty.IMPACT).ifPresent((opt) -> {
-			extDmgSource.setImpact(opt);
+		phase.getProperty(DamageProperty.IMPACT).ifPresent((opt) -> {
+			extDmgSource.setImpact(opt.get(extDmgSource.getImpact()));
 		});
 		
 		return extDmgSource;
 	}
 	
-	protected void spawnHitParticle(ServerWorld world, LivingData<?> attacker, Entity hit, Hand hand) {
-		Optional<RegistryObject<HitParticleType>> particleOptional = this.getProperty(AnimationProperty.PARTICLE);
+	protected void spawnHitParticle(ServerWorld world, LivingData<?> attacker, Entity hit, Phase phase) {
+		Optional<RegistryObject<HitParticleType>> particleOptional = phase.getProperty(DamageProperty.PARTICLE);
 		HitParticleType particle;
 		
-		if(particleOptional.isPresent())
+		if(particleOptional.isPresent()) {
 			particle = particleOptional.get().get();
-		else
-			particle = attacker.getWeaponHitParticle(hand);
+		} else {
+			particle = attacker.getWeaponHitParticle(phase.hand);
+		}
 		
 		particle.spawnParticleWithArgument(world, HitParticleType.DEFAULT, hit, attacker.getOriginalEntity());
 	}
 	
-	public <T> AttackAnimation addProperty(AnimationProperty<T> propertyType, T value) {
+	@Override
+	public Pose getPoseByTime(LivingData<?> entitydata, float time) {
+		Pose pose = super.getPoseByTime(entitydata, time);
+		
+		this.getProperty(AnimationProperty.DIRECTIONAL).ifPresent((b)->{
+			float pitch = entitydata.getAttackDirectionPitch();
+			JointTransform chest = pose.getTransformByName("Chest");
+			chest.setCustomRotation(Quaternion.rotate((float)Math.toRadians(pitch), new Vec3f(1,0,0), null));
+			
+			if (entitydata instanceof PlayerData) {
+				JointTransform head = pose.getTransformByName("Head");
+				head.setRotation(Quaternion.rotate((float)-Math.toRadians(pitch), new Vec3f(1,0,0), head.getRotation()));
+			}
+		});
+		
+		return pose;
+	}
+	
+	public <V> AttackAnimation addProperty(AnimationProperty<V> propertyType, V value) {
 		this.properties.put(propertyType, value);
 		return this;
 	}
 	
-	public void addProperties(Set<Map.Entry<AnimationProperty<?>, Object>> set) {
-		for(Map.Entry<AnimationProperty<?>, Object> entry : set) {
-			this.properties.put(entry.getKey(), entry.getValue());
-		}
+	public <V> AttackAnimation addProperty(DamageProperty<V> propertyType, V value) {
+		return this.addProperty(propertyType, value, 0);
+	}
+	
+	public <V> AttackAnimation addProperty(DamageProperty<V> propertyType, V value, int index) {
+		this.phases[index].addProperty(propertyType, value);
+		return this;
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected <T> Optional<T> getProperty(AnimationProperty<T> propertyType) {
-		return (Optional<T>) Optional.ofNullable(this.properties.get(propertyType));
+	protected <V> Optional<V> getProperty(AnimationProperty<V> propertyType) {
+		return (Optional<V>) Optional.ofNullable(this.properties.get(propertyType));
 	}
 	
 	public int getIndexer(float elapsedTime) {
-		return this.getCurrentPhase(elapsedTime).jointIndexer;
+		return this.getPhaseByTime(elapsedTime).jointIndexer;
 	}
 	
-	public Phase getCurrentPhase(float elapsedTime) {
+	public Phase getPhaseByTime(float elapsedTime) {
 		Phase currentPhase = null;
 		for(Phase phase : this.phases) {
 			currentPhase = phase;
@@ -234,6 +283,7 @@ public class AttackAnimation extends ActionAnimation {
 	}
 	
 	public static class Phase {
+		protected final Map<DamageProperty<?>, Object> properties = new HashMap<DamageProperty<?>, Object> ();;
 		protected final float antic;
 		protected final float preDelay;
 		protected final float contact;
@@ -265,6 +315,22 @@ public class AttackAnimation extends ActionAnimation {
 				}
 				this.jointIndexer = coded;
 			}
+		}
+		
+		public <V> Phase addProperty(DamageProperty<V> propertyType, V value) {
+			this.properties.put(propertyType, value);
+			return this;
+		}
+		
+		public void addProperties(Set<Map.Entry<DamageProperty<?>, Object>> set) {
+			for(Map.Entry<DamageProperty<?>, Object> entry : set) {
+				this.properties.put(entry.getKey(), entry.getValue());
+			}
+		}
+		
+		@SuppressWarnings("unchecked")
+		protected <V> Optional<V> getProperty(DamageProperty<V> propertyType) {
+			return (Optional<V>) Optional.ofNullable(this.properties.get(propertyType));
 		}
 	}
 }

@@ -8,10 +8,10 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.LazyValue;
 
 public enum ModItemTier implements IItemTier {
-	GREATSWORD(2, 550, 6.0F, 2.0F, 14, () -> {
-	     return Ingredient.fromItems(Items.IRON_INGOT);
-	}), KATANA(4, 1625, 9.0F, 5.0F, 22, () -> {
+	KATANA(4, 1625, 9.0F, 5.0F, 22, () -> {
 	      return Ingredient.fromItems(Items.NETHERITE_INGOT);
+	}), KNUCKLE(4, 255, 9.0F, 0.0F, 16, () -> {
+	      return Ingredient.fromItems(Items.IRON_INGOT);
 	});
 
 	private final int harvestLevel;
@@ -22,13 +22,13 @@ public enum ModItemTier implements IItemTier {
 	private final LazyValue<Ingredient> repairMaterial;
 
 	private ModItemTier(int harvestLevelIn, int maxUsesIn, float efficiencyIn, float attackDamageIn, int enchantabilityIn, Supplier<Ingredient> repairMaterialIn) {
-	      this.harvestLevel = harvestLevelIn;
-	      this.maxUses = maxUsesIn;
-	      this.efficiency = efficiencyIn;
-	      this.attackDamage = attackDamageIn;
-	      this.enchantability = enchantabilityIn;
-	      this.repairMaterial = new LazyValue<>(repairMaterialIn);
-	   }
+		this.harvestLevel = harvestLevelIn;
+		this.maxUses = maxUsesIn;
+		this.efficiency = efficiencyIn;
+		this.attackDamage = attackDamageIn;
+		this.enchantability = enchantabilityIn;
+		this.repairMaterial = new LazyValue<>(repairMaterialIn);
+	}
 
 	public int getMaxUses() {
 		return this.maxUses;

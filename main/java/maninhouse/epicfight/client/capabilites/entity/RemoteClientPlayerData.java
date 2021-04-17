@@ -35,34 +35,29 @@ public class RemoteClientPlayerData<T extends AbstractClientPlayerEntity> extend
 	private boolean swingArm;
 	
 	@Override
-	public boolean onEntityJoinWorld(T entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			prevHeldItem = ItemStack.EMPTY;
-			prevHeldItemOffHand = ItemStack.EMPTY;
-			
-			if(!(this instanceof ClientPlayerData)) {
-				ModNetworkManager.sendToServer(new CTSReqPlayerInfo(this.orgEntity.getEntityId()));
-			}
-			return true;
-		} else {
-			return false;
+	public void onEntityJoinWorld(T entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		this.prevHeldItem = ItemStack.EMPTY;
+		this.prevHeldItemOffHand = ItemStack.EMPTY;
+		if(!(this instanceof ClientPlayerData)) {
+			ModNetworkManager.sendToServer(new CTSReqPlayerInfo(this.orgEntity.getEntityId()));
 		}
 	}
 	
 	@Override
 	public void updateMotion() {
-		if(this.orgEntity.getHealth() <= 0.0F) {
+		if (this.orgEntity.getHealth() <= 0.0F) {
 			currentMotion = LivingMotion.DEATH;
-		} else if(orgEntity.isElytraFlying()) {
+		} else if (orgEntity.isElytraFlying()) {
 			currentMotion = LivingMotion.FLYING;
-		} else if(orgEntity.getRidingEntity() != null) {
+		} else if (orgEntity.getRidingEntity() != null) {
 			currentMotion = LivingMotion.MOUNT;
-		} else if(orgEntity.getPose() == Pose.SWIMMING && !this.orgEntity.isHandActive()) {
+		} else if (orgEntity.getPose() == Pose.SWIMMING && !this.orgEntity.isHandActive()) {
 			currentMotion = LivingMotion.SWIMMING;
 		} else {
 			AnimatorClient animator = getClientAnimator();
-			
-			if(orgEntity.canSwim() && orgEntity.getMotion().y < -0.005)
+
+			if (orgEntity.canSwim() && orgEntity.getMotion().y < -0.005)
 				currentMotion = LivingMotion.FLOATING;
 			else if(orgEntity.getMotion().y < -0.55F)
 				currentMotion = LivingMotion.FALL;
@@ -73,38 +68,37 @@ public class RemoteClientPlayerData<T extends AbstractClientPlayerEntity> extend
 					currentMotion = LivingMotion.RUNNING;
 				else
 					currentMotion = LivingMotion.WALKING;
-				
-				if(orgEntity.moveForward > 0)
-					animator.reversePlay = false;
+
+				if (orgEntity.moveForward > 0)
+					animator.setReverse(false, this.currentMotion);
 				else if (orgEntity.moveForward < 0)
-					animator.reversePlay = true;
+					animator.setReverse(true, this.currentMotion);
 			} else {
-				animator.reversePlay = false;
-				
-				if(orgEntity.isSneaking())
+				animator.setReverse(false, this.currentMotion);
+				if (orgEntity.isSneaking())
 					currentMotion = LivingMotion.KNEELING;
 				else
 					currentMotion = LivingMotion.IDLE;
 			}
 		}
-		
+
 		if (this.orgEntity.isHandActive() && orgEntity.getItemInUseCount() > 0) {
 			UseAction useAction = this.orgEntity.getHeldItem(this.orgEntity.getActiveHand()).getUseAction();
-			
-			if(useAction == UseAction.BLOCK)
+
+			if (useAction == UseAction.BLOCK)
 				currentMixMotion = LivingMotion.BLOCKING;
-			else if(useAction == UseAction.BOW)
+			else if (useAction == UseAction.BOW)
 				currentMixMotion = LivingMotion.AIMING;
-			else if(useAction == UseAction.CROSSBOW)
+			else if (useAction == UseAction.CROSSBOW)
 				currentMixMotion = LivingMotion.RELOADING;
-			else if(useAction == UseAction.SPEAR)
+			else if (useAction == UseAction.SPEAR)
 				currentMixMotion = LivingMotion.AIMING;
 			else
 				currentMixMotion = LivingMotion.NONE;
 		} else {
-			if(CrossbowItem.isCharged(this.orgEntity.getHeldItemMainhand()))
+			if (CrossbowItem.isCharged(this.orgEntity.getHeldItemMainhand()))
 				currentMixMotion = LivingMotion.AIMING;
-			else if(this.getClientAnimator().prevAiming())
+			else if (this.getClientAnimator().prevAiming())
 				this.playReboundAnimation();
 			else
 				currentMixMotion = LivingMotion.NONE;

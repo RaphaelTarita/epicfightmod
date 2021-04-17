@@ -5,7 +5,7 @@ import java.util.UUID;
 import maninhouse.epicfight.animation.LivingMotion;
 import maninhouse.epicfight.capabilities.entity.player.PlayerData;
 import maninhouse.epicfight.capabilities.entity.player.ServerPlayerData;
-import maninhouse.epicfight.entity.event.EntityEventListener.Event;
+import maninhouse.epicfight.entity.event.EntityEventListener.EventType;
 import maninhouse.epicfight.entity.event.PlayerEvent;
 import maninhouse.epicfight.gamedata.Animations;
 import maninhouse.epicfight.network.ModNetworkManager;
@@ -15,39 +15,33 @@ import maninhouse.epicfight.network.server.STCModifySkillVariable.VariableType;
 import maninhouse.epicfight.network.server.STCPlayAnimation;
 import net.minecraft.entity.player.ServerPlayerEntity;
 
-public class KatanaPassive extends Skill
-{
+public class KatanaPassive extends Skill {
 	private static final String NBT_KEY = "sheath";
 	private static final UUID EVENT_UUID = UUID.fromString("a416c93a-42cb-11eb-b378-0242ac130002");
-	
-	public KatanaPassive()
-	{
+
+	public KatanaPassive() {
 		super(SkillSlot.WEAPON_GIMMICK, 5.0F, "katana_passive");
 	}
 	
 	@Override
-	public void onInitiate(SkillContainer container)
-	{
+	public void onInitiate(SkillContainer container) {
 		container.getVariableNBT().putBoolean(NBT_KEY, false);
-		container.executer.getEventListener().addEventListener(Event.ON_ACTION_SERVER_EVENT, PlayerEvent.makeEvent(EVENT_UUID, (player)->{
+		container.executer.getEventListener().addEventListener(EventType.ON_ACTION_EVENT, PlayerEvent.makeEvent(EVENT_UUID, (player, args)->{
 			container.executer.getSkill(SkillSlot.WEAPON_GIMMICK).getContaining().setCooldownSynchronize((ServerPlayerData)player, 0);
 			return false;
 		}));
 	}
 	
 	@Override
-	public void onDeleted(SkillContainer container)
-	{
-		container.executer.getEventListener().removeListener(Event.ON_ACTION_SERVER_EVENT, EVENT_UUID);
+	public void onDeleted(SkillContainer container) {
+		container.executer.getEventListener().removeListener(EventType.ON_ACTION_EVENT, EVENT_UUID);
 	}
 	
 	@Override
-	public void onReset(SkillContainer container)
-	{
+	public void onReset(SkillContainer container) {
 		PlayerData<?> executer = container.executer;
-		
-		if(!executer.isRemote())
-		{
+
+		if (!executer.isRemote()) {
 			ServerPlayerEntity executePlayer = (ServerPlayerEntity) executer.getOriginalEntity();
 			container.getVariableNBT().putBoolean(NBT_KEY, false);
 			
@@ -62,14 +56,11 @@ public class KatanaPassive extends Skill
 	}
 	
 	@Override
-	public void setCooldown(SkillContainer container, float value)
-	{
+	public void setCooldown(SkillContainer container, float value) {
 		PlayerData<?> executer = container.executer;
 		
-		if(!executer.isRemote())
-		{
-			if(this.cooldown < value)
-			{
+		if (!executer.isRemote()) {
+			if (this.cooldown < value) {
 				ServerPlayerEntity executePlayer = (ServerPlayerEntity) executer.getOriginalEntity();
 				container.getVariableNBT().putBoolean(NBT_KEY, true);
 				
@@ -91,8 +82,7 @@ public class KatanaPassive extends Skill
 	}
 	
 	@Override
-	public float getRegenTimePerTick(PlayerData<?> player)
-	{
+	public float getRegenTimePerTick(PlayerData<?> player) {
 		return 1.0F;
 	}
 }

@@ -38,7 +38,7 @@ public class ClientEvents
 			{
 				CapabilityItem cap = Minecraft.getInstance().player.inventory.getItemStack().getCapability(ModCapabilities.CAPABILITY_ITEM, null).orElse(null);
 				
-				if(cap != null && !cap.canUsedOffhand())
+				if(cap != null && !cap.canUsedInOffhand())
 				{
 					if(slotUnderMouse.getBackground() != null && slotUnderMouse.getBackground().equals(OFFHAND_TEXTURE))
 					{
@@ -60,7 +60,7 @@ public class ClientEvents
 			{
 				CapabilityItem cap = Minecraft.getInstance().player.inventory.getItemStack().getCapability(ModCapabilities.CAPABILITY_ITEM, null).orElse(null);
 				
-				if(cap != null && !cap.canUsedOffhand())
+				if(cap != null && !cap.canUsedInOffhand())
 				{
 					if(slotUnderMouse.getBackground() != null && slotUnderMouse.getBackground().equals(OFFHAND_TEXTURE))
 					{

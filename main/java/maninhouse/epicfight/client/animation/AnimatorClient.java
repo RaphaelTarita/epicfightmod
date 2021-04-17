@@ -8,6 +8,7 @@ import java.util.Map;
 import maninhouse.epicfight.animation.AnimationPlayer;
 import maninhouse.epicfight.animation.Animator;
 import maninhouse.epicfight.animation.Joint;
+import maninhouse.epicfight.animation.JointTransform;
 import maninhouse.epicfight.animation.LivingMotion;
 import maninhouse.epicfight.animation.Pose;
 import maninhouse.epicfight.animation.types.MirrorAnimation;
@@ -26,7 +27,7 @@ public class AnimatorClient extends Animator {
 	public final MixLayer mixLayer;
 	private LivingMotion currentMotion;
 	private LivingMotion currentMixMotion;
-	public boolean reversePlay = false;
+	private boolean reversePlay = false;
 	public boolean mixLayerActivated = false;
 	
 	public AnimatorClient(LivingData<?> entitydata) {
@@ -54,6 +55,17 @@ public class AnimatorClient extends Animator {
 		this.baseLayer.playAnimation(nextAnimation, this.entitydata, modifyTime);
 	}
 	
+	private void playAnimationLiving(StaticAnimation nextAnimation, float modifyTime) {
+		this.baseLayer.pause = false;
+		this.mixLayer.pause = false;
+		this.baseLayer.playAnimation(nextAnimation, this.entitydata, modifyTime);
+	}
+	
+	@Override
+	public void reserveAnimation(StaticAnimation nextAnimation) {
+		
+	}
+	
 	@Override
 	public void vacateCurrentPlay() {
 		this.baseLayer.animationPlayer.setPlayAnimation(Animations.DUMMY_ANIMATION);
@@ -65,7 +77,7 @@ public class AnimatorClient extends Animator {
 		
 		if (motion == this.currentMotion) {
 			if (!this.entitydata.isInaction()) {
-				playAnimation(animation, 0);
+				playAnimationLiving(animation, 0);
 			}
 		}
 	}
@@ -106,11 +118,11 @@ public class AnimatorClient extends Animator {
 		this.defaultLivingAnimations.clear();
 		this.defaultLivingAnimations.putAll(this.livingAnimations);
 	}
-
+	
 	public void playLoopMotion() {
 		this.currentMotion = this.entitydata.currentMotion;
 		if(this.livingAnimations.containsKey(this.entitydata.currentMotion)) {
-			this.playAnimation(this.livingAnimations.get(this.entitydata.currentMotion), 0.0F);
+			this.playAnimationLiving(this.livingAnimations.get(this.entitydata.currentMotion), 0.0F);
 		}
 	}
 	
@@ -165,10 +177,11 @@ public class AnimatorClient extends Animator {
 	}
 	
 	public void setPoseToModel(float partialTicks) {
+		Joint rootJoint = this.entitydata.getEntityModel(ClientModels.LOGICAL_CLIENT).getArmature().getJointHierarcy();
 		if(this.mixLayerActivated) {
-			applyPoseToJoint(getCurrentPose(this.baseLayer, partialTicks), getCurrentPose(this.mixLayer, partialTicks), this.entitydata.getEntityModel(ClientModels.LOGICAL_CLIENT).getArmature().getJointHierarcy(), new VisibleMatrix4f());
+			applyPoseToJoint(getCurrentPose(this.baseLayer, partialTicks), getCurrentPose(this.mixLayer, partialTicks), rootJoint, new VisibleMatrix4f());
 		} else {
-			applyPoseToJoint(getCurrentPose(this.baseLayer, partialTicks), this.entitydata.getEntityModel(ClientModels.LOGICAL_CLIENT).getArmature().getJointHierarcy(), new VisibleMatrix4f());
+			applyPoseToJoint(getCurrentPose(this.baseLayer, partialTicks), rootJoint, new VisibleMatrix4f());
 		}
 	}
 	
@@ -185,12 +198,12 @@ public class AnimatorClient extends Animator {
 			bindTransformMix.m31 = bindTransformBase.m31;
 			joint.setAnimatedTransform(bindTransformMix);
 			
-			for(Joint joints : joint.getSubJoints())
-			{
-				if(this.mixLayer.jointMasked(joints.getName()) || this.currentMotion == LivingMotion.IDLE)
+			for (Joint joints : joint.getSubJoints()) {
+				if(this.mixLayer.jointMasked(joints.getName()) || this.currentMotion == LivingMotion.IDLE) {
 					applyPoseToJoint(mix, joints, bindTransformMix);
-				else
+				} else {
 					applyPoseToJoint(base, joints, bindTransformBase);
+				}
 			}
 		} else {
 			VisibleMatrix4f currentLocalTransform = base.getTransformByName(joint.getName()).toTransformMatrix();
@@ -205,10 +218,25 @@ public class AnimatorClient extends Animator {
 	}
 	
 	private void applyPoseToJoint(Pose pose, Joint joint, VisibleMatrix4f parentTransform) {
-		VisibleMatrix4f currentLocalTransform = pose.getTransformByName(joint.getName()).toTransformMatrix();
+		JointTransform jt = pose.getTransformByName(joint.getName());
+		VisibleMatrix4f currentLocalTransform = jt.toTransformMatrix();
 		VisibleMatrix4f.mul(joint.getLocalTrasnform(), currentLocalTransform, currentLocalTransform);
 		VisibleMatrix4f bindTransform = VisibleMatrix4f.mul(parentTransform, currentLocalTransform, null);
 		VisibleMatrix4f.mul(bindTransform, joint.getAnimatedTransform(), bindTransform);
+		
+		if (jt.getCustomRotation() != null) {
+			float x = bindTransform.m30;
+			float y = bindTransform.m31;
+			float z = bindTransform.m32;
+			bindTransform.m30 = 0;
+			bindTransform.m31 = 0;
+			bindTransform.m32 = 0;
+			VisibleMatrix4f.mul(jt.getCustomRotation().toRotationMatrix(), bindTransform, bindTransform);
+			bindTransform.m30 = x;
+			bindTransform.m31 = y;
+			bindTransform.m32 = z;
+		}
+		
 		joint.setAnimatedTransform(bindTransform);
 		
 		for (Joint joints : joint.getSubJoints()) {
@@ -216,8 +244,9 @@ public class AnimatorClient extends Animator {
 		}
 	}
 	
+	@Override
 	public void update() {
-		this.baseLayer.update(this.entitydata, this.reversePlay);
+		this.baseLayer.update(this.entitydata);
 		if (this.baseLayer.animationPlayer.isEnd()) {
 			if (this.baseLayer.nextPlaying == null && this.currentMotion != LivingMotion.DEATH) {
 				this.entitydata.updateMotion();
@@ -226,7 +255,7 @@ public class AnimatorClient extends Animator {
 		}
 		
 		if (this.mixLayerActivated) {
-			this.mixLayer.update(this.entitydata, false);
+			this.mixLayer.update(this.entitydata);
 			if (this.mixLayer.animationPlayer.isEnd()) {
 				if (this.mixLayer.linkEndPhase) {
 					if (this.mixLayer.nextPlaying == null) {
@@ -289,7 +318,20 @@ public class AnimatorClient extends Animator {
 		this.playMixLayerAnimation(this.livingAnimations.get(LivingMotion.SHOTING));
 		this.entitydata.resetLivingMixLoop();
 	}
-
+	
+	@Override
+	public boolean isReverse() {
+		return this.reversePlay;
+	}
+	
+	public void setReverse(boolean flag, LivingMotion motion) {
+		if(this.reversePlay != flag && this.currentMotion == motion) {
+			AnimationPlayer player = this.baseLayer.animationPlayer;
+			player.setElapsedTime(player.getPlay().getTotalTime() - player.getElapsedTime());
+		}
+		this.reversePlay = flag;
+	}
+	
 	@Override
 	public AnimationPlayer getPlayer() {
 		return this.baseLayer.animationPlayer;

@@ -1,6 +1,7 @@
 package maninhouse.epicfight.capabilities;
 
 import maninhouse.epicfight.capabilities.entity.CapabilityEntity;
+import maninhouse.epicfight.capabilities.entity.projectile.CapabilityProjectile;
 import maninhouse.epicfight.capabilities.item.CapabilityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.INBT;
@@ -15,6 +16,8 @@ public class ModCapabilities {
 	public static final Capability<CapabilityEntity> CAPABILITY_ENTITY = null;
 	@CapabilityInject(CapabilityItem.class)
     public static final Capability<CapabilityItem> CAPABILITY_ITEM = null;
+	@CapabilityInject(CapabilityProjectile.class)
+    public static final Capability<CapabilityProjectile> CAPABILITY_PROJECTILE = null;
 	
 	public static void registerCapabilities() {
 		CapabilityManager.INSTANCE.register(CapabilityItem.class, new IStorage<CapabilityItem>() {
@@ -36,6 +39,17 @@ public class ModCapabilities {
 
 			@Override
 			public void readNBT(Capability<CapabilityEntity> capability, CapabilityEntity instance, Direction side, INBT nbt) {
+			}
+		}, () -> null);
+		
+		CapabilityManager.INSTANCE.register(CapabilityProjectile.class, new IStorage<CapabilityProjectile>() {
+			@Override
+			public INBT writeNBT(Capability<CapabilityProjectile> capability, CapabilityProjectile instance, Direction side) {
+				return null;
+			}
+
+			@Override
+			public void readNBT(Capability<CapabilityProjectile> capability, CapabilityProjectile instance, Direction side, INBT nbt) {
 			}
 		}, () -> null);
 	}

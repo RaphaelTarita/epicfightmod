@@ -43,12 +43,15 @@ public class SkillBookItem extends Item {
 	@Override
 	@OnlyIn(Dist.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-		tooltip.add(new TranslationTextComponent(String.format("skill.%s.%s", EpicFightMod.MODID, stack.getTag().get("skill").getString())).mergeStyle(TextFormatting.GREEN));
+		if (stack.getTag() != null && stack.getTag().contains("skill")) {
+			tooltip.add(new TranslationTextComponent(String.format("skill.%s.%s", EpicFightMod.MODID, stack.getTag().get("skill").getString()))
+					.mergeStyle(TextFormatting.GREEN));
+		}
 	}
 	
 	@Override
 	public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-		if (group == EpicFightGroup.ITEMS) {
+		if (group == EpicFightItemGroup.ITEMS) {
 			Skills.MODIFIABLE_SKILLS.values().stream().forEach((skill)->{
 				ItemStack stack = new ItemStack(this);
 				setContainingSkilll(skill, stack);

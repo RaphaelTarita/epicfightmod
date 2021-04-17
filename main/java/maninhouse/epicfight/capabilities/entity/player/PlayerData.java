@@ -8,7 +8,7 @@ import maninhouse.epicfight.capabilities.entity.DataKeys;
 import maninhouse.epicfight.capabilities.entity.LivingData;
 import maninhouse.epicfight.client.animation.AnimatorClient;
 import maninhouse.epicfight.entity.event.EntityEventListener;
-import maninhouse.epicfight.entity.event.EntityEventListener.Event;
+import maninhouse.epicfight.entity.event.EntityEventListener.EventType;
 import maninhouse.epicfight.entity.event.PlayerEvent;
 import maninhouse.epicfight.gamedata.Animations;
 import maninhouse.epicfight.gamedata.Models;
@@ -38,20 +38,16 @@ public abstract class PlayerData<T extends PlayerEntity> extends LivingData<T> {
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(T entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			this.eventListeners = new EntityEventListener(this);
-			this.skills[SkillSlot.DODGE.getIndex()].setSkill(Skills.ROLL);
-			this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(0.0F));
-			this.tickSinceLastAction = 40;
-			this.eventListeners.addEventListener(Event.ON_ACTION_SERVER_EVENT, PlayerEvent.makeEvent(ACTION_EVENT_UUID, (player)->{
-				player.tickSinceLastAction = 0;
-				return false;
-			}));
-			return true;
-		} else {
+	public void onEntityJoinWorld(T entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		this.eventListeners = new EntityEventListener(this);
+		this.skills[SkillSlot.DODGE.getIndex()].setSkill(Skills.ROLL);
+		this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(0.0F));
+		this.tickSinceLastAction = 40;
+		this.eventListeners.addEventListener(EventType.ON_ACTION_EVENT, PlayerEvent.makeEvent(ACTION_EVENT_UUID, (player, args)->{
+			player.tickSinceLastAction = 0;
 			return false;
-		}
+		}));
 	}
 	
 	@Override
@@ -84,14 +80,17 @@ public abstract class PlayerData<T extends PlayerEntity> extends LivingData<T> {
 	public void updateOnServer() {
 		super.updateOnServer();
 		this.tickSinceLastAction++;
-		
 		float stunArmor = this.getStunArmor();
 		float maxStunArmor = this.getMaxStunArmor();
 		
-		if(stunArmor < maxStunArmor && this.tickSinceLastAction > 60) {
+		if (stunArmor < maxStunArmor && this.tickSinceLastAction > 60) {
 			float stunArmorFactor = 1.0F + (stunArmor / maxStunArmor);
 			float healthFactor = this.orgEntity.getHealth() / this.orgEntity.getMaxHealth();
 			this.setStunArmor(stunArmor + maxStunArmor * 0.01F * healthFactor * stunArmorFactor);
+		}
+		
+		if (maxStunArmor < stunArmor) {
+			this.setStunArmor(maxStunArmor);
 		}
 	}
 	
@@ -99,11 +98,11 @@ public abstract class PlayerData<T extends PlayerEntity> extends LivingData<T> {
 	public void update() {
 		if(this.orgEntity.getRidingEntity() == null) {
 			for(SkillContainer container : this.skills) {
-				if(container != null)
+				if(container != null) {
 					container.update();
+				}
 			}
 		}
-		
 		super.update();
 	}
 	
@@ -113,10 +112,6 @@ public abstract class PlayerData<T extends PlayerEntity> extends LivingData<T> {
 	
 	public SkillContainer getSkill(int slotIndex) {
 		return this.skills[slotIndex];
-	}
-	
-	public float getWeightPaneltyDivider() {
-		return (float) (40.0F / this.getWeight());
 	}
 	
 	public float getAttackSpeed() {

@@ -20,34 +20,26 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvent;
 
-public class RavagerData extends MobData<RavagerEntity>
-{
-	public RavagerData()
-	{
+public class RavagerData extends MobData<RavagerEntity> {
+	public RavagerData() {
 		super(Faction.ILLAGER);
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(RavagerEntity entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			this.orgEntity.entityCollisionReduction = 0.2F;
-			return true;
-		} else {
-			return false;
-		}
+	public void onEntityJoinWorld(RavagerEntity entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		this.orgEntity.entityCollisionReduction = 0.2F;
 	}
 	
 	@Override
-	protected void initAttributes()
-	{
+	protected void initAttributes() {
 		super.initAttributes();
-		this.orgEntity.getAttribute(ModAttributes.HIT_AT_ONCE.get()).setBaseValue(8.0D);
+		this.orgEntity.getAttribute(ModAttributes.MAX_STRIKES.get()).setBaseValue(8.0D);
 		this.orgEntity.getAttribute(ModAttributes.IMPACT.get()).setBaseValue(10.0D);
 	}
 	
 	@Override
-	protected void initAnimator(AnimatorClient animatorClient)
-	{
+	protected void initAnimator(AnimatorClient animatorClient) {
 		animatorClient.addLivingAnimation(LivingMotion.IDLE, Animations.RAVAGER_IDLE);
 		animatorClient.addLivingAnimation(LivingMotion.WALKING, Animations.RAVAGER_WALK);
 		animatorClient.addLivingAnimation(LivingMotion.DEATH, Animations.RAVAGER_DEATH);
@@ -55,24 +47,20 @@ public class RavagerData extends MobData<RavagerEntity>
 	}
 	
 	@Override
-	public void updateMotion()
-	{
+	public void updateMotion() {
 		super.commonCreatureUpdateMotion();
 	}
 	
 	@Override
-	protected void initAI()
-	{
+	protected void initAI() {
 		super.initAI();
-		
 		orgEntity.goalSelector.addGoal(1, new ChasingGoal(this, this.orgEntity, 1.0D, false));
 		orgEntity.goalSelector.addGoal(0, new AttackPatternPercentGoal(this, this.orgEntity, 0.0D, 2.25D, 0.1F, true, MobAttackPatterns.RAVAGER_PATTERN2));
         orgEntity.goalSelector.addGoal(1, new AttackPatternGoal(this, this.orgEntity, 1.0D, 2.4D, true, MobAttackPatterns.RAVAGER_PATTERN1));
 	}
 	
 	@Override
-	public boolean hurtEntity(Entity hitTarget, IExtendedDamageSource source, float amount)
-	{
+	public boolean hurtEntity(Entity hitTarget, Hand handIn, IExtendedDamageSource source, float amount) {
 		boolean succed = hitTarget.attackEntityFrom((DamageSource)source, amount);
 		if (!succed) {
 			if (this.orgEntity.stunTick > 0) {
@@ -84,26 +72,22 @@ public class RavagerData extends MobData<RavagerEntity>
 	}
 	
 	@Override
-	public StaticAnimation getHitAnimation(StunType stunType)
-	{
+	public StaticAnimation getHitAnimation(StunType stunType) {
 		return null;
 	}
-	
+
 	@Override
-	public SoundEvent getWeaponHitSound(Hand hand)
-	{
+	public SoundEvent getWeaponHitSound(Hand hand) {
 		return Sounds.BLUNT_HIT_HARD;
 	}
-	
+
 	@Override
-	public SoundEvent getSwingSound(Hand hand)
-	{
+	public SoundEvent getSwingSound(Hand hand) {
 		return Sounds.WHOOSH_BIG;
 	}
-	
+
 	@Override
-	public <M extends Model> M getEntityModel(Models<M> modelDB)
-	{
+	public <M extends Model> M getEntityModel(Models<M> modelDB) {
 		return modelDB.ENTITY_RAVAGER;
 	}
 }

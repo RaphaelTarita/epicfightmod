@@ -169,7 +169,7 @@ public class ChasingGoal extends Goal
 		
 		LivingEntity livingentity = this.attacker.getAttackTarget();
 		this.attacker.getLookController().setLookPositionWithEntity(livingentity, 30.0F, 30.0F);
-		double d0 = this.attacker.getDistanceSq(livingentity.getPosX(), livingentity.getBoundingBox().minY, livingentity.getPosZ());
+		double d0 = this.attacker.getDistanceSq(livingentity.getPosX(), livingentity.getPosY(), livingentity.getPosZ());
 		
 		if (this.longMemory || this.attacker.getEntitySenses().canSee(livingentity) && --this.delayCounter <= 0 && 
 				(this.targetX == 0.0D && this.targetY == 0.0D && this.targetZ == 0.0D || livingentity.getDistanceSq(this.targetX, this.targetY, this.targetZ) >= 1.0D

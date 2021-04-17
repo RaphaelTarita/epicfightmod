@@ -25,13 +25,9 @@ public class ZombieData<T extends ZombieEntity> extends BipedMobData<T> {
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(T entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(0.0F));
-			return true;
-		} else {
-			return false;
-		}
+	public void onEntityJoinWorld(T entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(0.0F));
 	}
 	
 	@Override

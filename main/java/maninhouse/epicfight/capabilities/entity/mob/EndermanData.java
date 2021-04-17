@@ -57,13 +57,9 @@ public class EndermanData extends BipedMobData<EndermanEntity> {
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(EndermanEntity entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(6.0F));
-			return true;
-		} else {
-			return false;
-		}
+	public void onEntityJoinWorld(EndermanEntity entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(6.0F));
 	}
 	
 	@Override

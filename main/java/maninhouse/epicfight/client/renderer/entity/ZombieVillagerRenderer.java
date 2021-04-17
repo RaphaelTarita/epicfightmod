@@ -4,7 +4,10 @@ import maninhouse.epicfight.capabilities.entity.mob.ZombieData;
 import maninhouse.epicfight.client.renderer.layer.VillagerProfessionLayer;
 import net.minecraft.entity.monster.ZombieVillagerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class ZombieVillagerRenderer extends BipedRenderer<ZombieVillagerEntity, ZombieData<ZombieVillagerEntity>> {
 	private static final ResourceLocation ZOMBIE_VILLAGER_TEXTURE = new ResourceLocation("textures/entity/zombie_villager/zombie_villager.png");
 	

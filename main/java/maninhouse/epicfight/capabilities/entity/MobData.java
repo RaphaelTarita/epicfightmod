@@ -16,7 +16,9 @@ import maninhouse.epicfight.entity.ai.AttackPatternGoal;
 import maninhouse.epicfight.entity.ai.ChasingGoal;
 import maninhouse.epicfight.entity.ai.RangeAttackMobGoal;
 import maninhouse.epicfight.entity.ai.attribute.ModAttributes;
+import maninhouse.epicfight.main.EpicFightMod;
 import maninhouse.epicfight.network.server.STCMobInitialSetting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -27,6 +29,8 @@ import net.minecraft.entity.ai.goal.RangedAttackGoal;
 import net.minecraft.entity.ai.goal.RangedBowAttackGoal;
 import net.minecraft.entity.ai.goal.RangedCrossbowAttackGoal;
 import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3d;
 
 public abstract class MobData<T extends MobEntity> extends LivingData<T> {
 	protected final Faction mobFaction;
@@ -40,15 +44,9 @@ public abstract class MobData<T extends MobEntity> extends LivingData<T> {
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(T entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			if(!this.isRemote() && !this.orgEntity.isAIDisabled()) {
-				initAI();
-			}
-			return true;
-		} else {
-			return false;
-		}
+	public void onEntityJoinWorld(T entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		initAI();
 	}
 	
 	protected void initAI() {
@@ -60,8 +58,7 @@ public abstract class MobData<T extends MobEntity> extends LivingData<T> {
 		Iterator<PrioritizedGoal> iterator = goals.iterator();
 		List<Goal> toRemove = Lists.<Goal>newArrayList();
 		
-        while (iterator.hasNext())
-        {
+		while (iterator.hasNext()) {
         	PrioritizedGoal goal = iterator.next();
             Goal inner = goal.getGoal();
             
@@ -72,20 +69,17 @@ public abstract class MobData<T extends MobEntity> extends LivingData<T> {
             }
         }
         
-        for(Goal AI : toRemove)
-        {
+		for (Goal AI : toRemove) {
         	orgEntity.goalSelector.removeGoal(AI);
         }
 	}
 	
-	public STCMobInitialSetting sendInitialInformationToClient()
-	{
+	public STCMobInitialSetting sendInitialInformationToClient() {
 		return null;
 	}
-	
-	public void clientInitialSettings(ByteBuf buf)
-	{
-		
+
+	public void clientInitialSettings(ByteBuf buf) {
+
 	}
 	
 	@Override
@@ -103,22 +97,37 @@ public abstract class MobData<T extends MobEntity> extends LivingData<T> {
 	}
 	
 	@Override
-	public boolean isTeam(Entity entityIn)
-	{
+	public boolean isTeam(Entity entityIn) {
 		CapabilityEntity<?> cap = entityIn.getCapability(ModCapabilities.CAPABILITY_ENTITY).orElse(null);
-		if(cap != null && cap instanceof MobData)
-			if(((MobData<?>)cap).mobFaction.equals(this.mobFaction))
-			{
+		if(cap != null && cap instanceof MobData) {
+			if (((MobData<?>) cap).mobFaction.equals(this.mobFaction)) {
 				Optional<LivingEntity> opt = Optional.ofNullable(this.getAttackTarget());
 				return opt.map((attackTarget)->!attackTarget.isEntityEqual(entityIn)).orElse(true);
 			}
+		}
 		
 		return super.isTeam(entityIn);
 	}
 	
 	@Override
-	public LivingEntity getAttackTarget()
-	{
+	public LivingEntity getAttackTarget() {
 		return this.orgEntity.getAttackTarget();
+	}
+	
+	@Override
+	public float getAttackDirectionPitch() {
+		Entity attackTarget = this.getAttackTarget();
+		if (attackTarget != null) {
+			float partialTicks = EpicFightMod.isPhysicalClient() ? Minecraft.getInstance().getRenderPartialTicks() : 1.0F;
+			Vector3d target = attackTarget.getEyePosition(partialTicks);
+			Vector3d vector3d = this.orgEntity.getEyePosition(partialTicks);
+			double d0 = target.x - vector3d.x;
+			double d1 = target.y - vector3d.y;
+			double d2 = target.z - vector3d.z;
+			double d3 = (double) MathHelper.sqrt(d0 * d0 + d2 * d2);
+			return MathHelper.clamp(MathHelper.wrapDegrees((float) ((MathHelper.atan2(d1, d3) * (double) (180F / (float) Math.PI)))), -30.0F, 30.0F);
+		} else {
+			return super.getAttackDirectionPitch();
+		}
 	}
 }

@@ -22,9 +22,10 @@ public class IngameConfigurationGui extends Screen {
 	
 	@Override
 	protected void init() {
-		Option<Boolean> showHealthIndicator = EpicFightMod.INGAME_CONFIG.showHealthIndicator;
-		Option<Boolean> filterAnimation = EpicFightMod.INGAME_CONFIG.filterAnimation;
-		Option<Integer> longPressCounter = EpicFightMod.INGAME_CONFIG.longPressCount;
+		Option<Boolean> showHealthIndicator = EpicFightMod.CLIENT_INGAME_CONFIG.showHealthIndicator;
+		Option<Boolean> showTargetIndicator = EpicFightMod.CLIENT_INGAME_CONFIG.showTargetIndicator;
+		Option<Boolean> filterAnimation = EpicFightMod.CLIENT_INGAME_CONFIG.filterAnimation;
+		Option<Integer> longPressCounter = EpicFightMod.CLIENT_INGAME_CONFIG.longPressCount;
 		
 		Button longPressCounterButton = this.addButton(new RewindableButton(this.width / 2 - 100, this.height / 4 - 24, 200, 20,
 			new TranslationTextComponent("gui."+EpicFightMod.MODID+".long_press_counter", (ItemStack.DECIMALFORMAT.format(longPressCounter.getValue()))),
@@ -58,15 +59,25 @@ public class IngameConfigurationGui extends Screen {
 			}
 		));
 		
+		Button showTargetIndicatorButton = this.addButton(new Button(this.width / 2 - 100, this.height / 4 + 48, 200, 20,
+				new TranslationTextComponent("gui."+EpicFightMod.MODID+".target_indicator." + (showTargetIndicator.getValue() ? "on" : "off")), (button) -> {
+					showTargetIndicator.setValue(!showTargetIndicator.getValue());
+					button.setMessage(new TranslationTextComponent("gui."+EpicFightMod.MODID+".target_indicator." + (showTargetIndicator.getValue() ? "on" : "off")));
+				}, (button, matrixStack, mouseX, mouseY) -> {
+			        this.renderTooltip(matrixStack, this.minecraft.fontRenderer.trimStringToWidth(new TranslationTextComponent("gui.epicfight.target_indicator.tooltip"), Math.max(this.width / 2 - 43, 170)), mouseX, mouseY);
+				}
+			));
+		
 		this.addButton(new Button(this.width / 2 - 100, this.height / 4 + 150, 96, 20, new TranslationTextComponent("gui.done"), (button) -> {
 			this.closeScreen();
 		}));
 		
 		this.addButton(new Button(this.width / 2 + 4, this.height / 4 + 150, 96, 20, new TranslationTextComponent("controls.reset"), (button) -> {
-			EpicFightMod.INGAME_CONFIG.resetSettings();
+			EpicFightMod.CLIENT_INGAME_CONFIG.resetSettings();
 			filterAnimationButton.setMessage(new TranslationTextComponent("gui."+EpicFightMod.MODID+".filter_animation." + (filterAnimation.getValue() ? "on" : "off")));
 			longPressCounterButton.setMessage(new TranslationTextComponent("gui."+EpicFightMod.MODID+".long_press_counter", (ItemStack.DECIMALFORMAT.format(longPressCounter.getValue()))));
 			showHealthIndicatorButton.setMessage(new TranslationTextComponent("gui."+EpicFightMod.MODID+".health_indicator." + (showHealthIndicator.getValue() ? "on" : "off")));
+			showTargetIndicatorButton.setMessage(new TranslationTextComponent("gui."+EpicFightMod.MODID+".target_indicator." + (showTargetIndicator.getValue() ? "on" : "off")));
 		}));
 	}
 	
@@ -78,7 +89,7 @@ public class IngameConfigurationGui extends Screen {
 	
 	@Override
 	public void closeScreen() {
-		EpicFightMod.INGAME_CONFIG.save();
+		EpicFightMod.CLIENT_INGAME_CONFIG.save();
 		this.minecraft.displayGuiScreen(this.parentScreen);
 	}
 }

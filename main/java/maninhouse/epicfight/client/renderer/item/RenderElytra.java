@@ -8,12 +8,14 @@ import maninhouse.epicfight.client.model.ClientModels;
 import maninhouse.epicfight.utils.math.MathUtils;
 import maninhouse.epicfight.utils.math.Vec3f;
 import maninhouse.epicfight.utils.math.VisibleMatrix4f;
+import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.model.ElytraModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerModelPart;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -45,9 +47,23 @@ public class RenderElytra extends RenderItemBase {
         float f2 = f1 - f;
 		float f7 = entity.getPitch(partialTicks);
 		
+		ResourceLocation resourcelocation;
+        if (entity instanceof AbstractClientPlayerEntity) {
+           AbstractClientPlayerEntity abstractclientplayerentity = (AbstractClientPlayerEntity)entity;
+           if (abstractclientplayerentity.isPlayerInfoSet() && abstractclientplayerentity.getLocationElytra() != null) {
+              resourcelocation = abstractclientplayerentity.getLocationElytra();
+           } else if (abstractclientplayerentity.hasPlayerInfo() && abstractclientplayerentity.getLocationCape() != null && abstractclientplayerentity.isWearing(PlayerModelPart.CAPE)) {
+              resourcelocation = abstractclientplayerentity.getLocationCape();
+           } else {
+              resourcelocation = TEXTURE_ELYTRA;
+           }
+        } else {
+           resourcelocation = TEXTURE_ELYTRA;
+        }
+		
 		this.modelElytra.isChild = entity.isChild();
         this.modelElytra.setRotationAngles(entity, entity.limbSwing, entity.limbSwingAmount, entity.ticksExisted, f2, f7);
-	    IVertexBuilder ivertexbuilder = ItemRenderer.getArmorVertexBuilder(buffer, RenderType.getArmorCutoutNoCull(TEXTURE_ELYTRA), false, stack.hasEffect());
+	    IVertexBuilder ivertexbuilder = ItemRenderer.getArmorVertexBuilder(buffer, RenderType.getArmorCutoutNoCull(resourcelocation), false, stack.hasEffect());
 	    this.modelElytra.render(viewMatrixStack, ivertexbuilder, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
 	}
 }

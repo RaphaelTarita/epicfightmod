@@ -8,6 +8,7 @@ import maninhouse.epicfight.animation.LivingMotion;
 import maninhouse.epicfight.capabilities.entity.LivingData.EntityState;
 import maninhouse.epicfight.capabilities.entity.player.PlayerData;
 import maninhouse.epicfight.capabilities.entity.player.ServerPlayerData;
+import maninhouse.epicfight.capabilities.item.CapabilityItem;
 import maninhouse.epicfight.client.capabilites.entity.ClientPlayerData;
 import maninhouse.epicfight.client.events.engine.ControllEngine;
 import maninhouse.epicfight.config.ConfigurationIngame;
@@ -15,6 +16,8 @@ import maninhouse.epicfight.main.EpicFightMod;
 import maninhouse.epicfight.network.ModNetworkManager;
 import maninhouse.epicfight.network.server.STCSetSkillValue;
 import maninhouse.epicfight.network.server.STCSetSkillValue.Target;
+import maninhouse.epicfight.utils.game.Formulars;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -181,7 +184,7 @@ public class Skill {
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public List<ITextComponent> getTooltip() {
+	public List<ITextComponent> getTooltipOnItem(ItemStack itemStack, CapabilityItem cap, PlayerData<?> playerCap) {
 		List<ITextComponent> list = Lists.<ITextComponent>newArrayList();
 		return list;
 	}
@@ -191,7 +194,7 @@ public class Skill {
 	}
 
 	public float getRegenTimePerTick(PlayerData<?> player) {
-		return player.getWeightPaneltyDivider();
+		return Formulars.getSkillRegen((float)player.getWeight(), player);
 	}
 
 	public SkillSlot getSlot() {

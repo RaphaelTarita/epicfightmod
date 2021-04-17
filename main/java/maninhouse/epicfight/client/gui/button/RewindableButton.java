@@ -3,7 +3,10 @@ package maninhouse.epicfight.client.gui.button;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class RewindableButton extends Button {
 	protected final Button.IPressable onRewindPress;
 	

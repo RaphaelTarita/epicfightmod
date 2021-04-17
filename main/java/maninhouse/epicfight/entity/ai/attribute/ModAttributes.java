@@ -19,8 +19,8 @@ public class ModAttributes {
 	
     public static final RegistryObject<Attribute> MAX_STUN_ARMOR = ATTRIBUTES.register("stun_armor", () -> new RangedAttribute("attribute.name." + EpicFightMod.MODID + ".stun_armor", 0.0D, 0.0D, 1024.0D).setShouldWatch(true));
     public static final RegistryObject<Attribute> WEIGHT = ATTRIBUTES.register("weight", () -> new RangedAttribute("attribute.name." + EpicFightMod.MODID + ".weight", 0.0D, 0.0D, 1024.0).setShouldWatch(true));
-    public static final RegistryObject<Attribute> HIT_AT_ONCE = ATTRIBUTES.register("hit_at_once", () -> new RangedAttribute("attribute.name." + EpicFightMod.MODID + ".hit_at_once", 1.0D, 1.0D, 1024.0).setShouldWatch(true));
-	public static final RegistryObject<Attribute> IGNORE_DEFENCE = ATTRIBUTES.register("armor_negation", () -> new RangedAttribute("attribute.name." + EpicFightMod.MODID + ".armor_negation", 0.0D, 0.0D, 100.0D).setShouldWatch(true));
+    public static final RegistryObject<Attribute> MAX_STRIKES = ATTRIBUTES.register("max_strikes", () -> new RangedAttribute("attribute.name." + EpicFightMod.MODID + ".max_strikes", 1.0D, 1.0D, 1024.0).setShouldWatch(true));
+	public static final RegistryObject<Attribute> ARMOR_NEGATION = ATTRIBUTES.register("armor_negation", () -> new RangedAttribute("attribute.name." + EpicFightMod.MODID + ".armor_negation", 0.0D, 0.0D, 100.0D).setShouldWatch(true));
 	public static final RegistryObject<Attribute> IMPACT = ATTRIBUTES.register("impact", () -> new RangedAttribute("attribute.name." + EpicFightMod.MODID + ".impact", 0.0D, 0.0D, 1024.0).setShouldWatch(true));
 	public static final RegistryObject<Attribute> OFFHAND_ATTACK_DAMAGE = ATTRIBUTES.register("offhand_attack_damage", () -> new RangedAttribute("offhand attack damage", 1.0D, 0.0D, 2048.0D));
 	public static final RegistryObject<Attribute> OFFHAND_ATTACK_SPEED = ATTRIBUTES.register("offhand_attack_speed", () -> new RangedAttribute("offhand attack speed", 4.0D, 0.0D, 1024.0D).setShouldWatch(true));
@@ -61,9 +61,9 @@ public class ModAttributes {
     
     private static void general(EntityType<? extends LivingEntity> entityType, EntityAttributeModificationEvent event) {
 		event.add(entityType, ModAttributes.WEIGHT.get());
-		event.add(entityType, ModAttributes.IGNORE_DEFENCE.get());
+		event.add(entityType, ModAttributes.ARMOR_NEGATION.get());
 		event.add(entityType, ModAttributes.IMPACT.get());
-		event.add(entityType, ModAttributes.HIT_AT_ONCE.get());
+		event.add(entityType, ModAttributes.MAX_STRIKES.get());
 	}
     
     private static void withStunArmor(EntityType<? extends LivingEntity> entityType, EntityAttributeModificationEvent event) {
@@ -77,11 +77,11 @@ public class ModAttributes {
 		event.add(entityType, ModAttributes.OFFHAND_ATTACK_SPEED.get());
 	}
 	
-	public static AttributeModifier getIgnoreDefenceModifier(double value) {
+	public static AttributeModifier getArmorNegationModifier(double value) {
 		return new AttributeModifier(ModAttributes.IGNORE_DEFENCE_ID, EpicFightMod.MODID + ":weapon_modifier", value, AttributeModifier.Operation.ADDITION);
 	}
 
-	public static AttributeModifier getHitAtOnceModifier(int value) {
+	public static AttributeModifier getMaxStrikesModifier(int value) {
 		return new AttributeModifier(ModAttributes.HIT_AT_ONCE_ID, EpicFightMod.MODID + ":weapon_modifier", (double) value, AttributeModifier.Operation.ADDITION);
 	}
 

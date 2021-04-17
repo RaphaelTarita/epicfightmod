@@ -23,13 +23,9 @@ public class ZombifiedPiglinData extends BipedMobData<ZombifiedPiglinEntity>
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(ZombifiedPiglinEntity entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(0.0F));
-			return true;
-		} else {
-			return false;
-		}
+	public void onEntityJoinWorld(ZombifiedPiglinEntity entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(0.0F));
 	}
 	
 	@Override

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 
 import maninhouse.epicfight.client.ClientEngine;
 import maninhouse.epicfight.client.renderer.ModRenderTypes;
+import maninhouse.epicfight.main.EpicFightMod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.entity.LivingEntity;
@@ -16,7 +17,9 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class TargetIndicator extends EntityIndicator {
 	@Override
 	public boolean shouldDraw(LivingEntity entityIn) {
-		if(entityIn != ClientEngine.INSTANCE.getPlayerData().getAttackTarget())
+		if (!EpicFightMod.CLIENT_INGAME_CONFIG.showTargetIndicator.getValue()) 
+			return false;
+		else if(entityIn != ClientEngine.INSTANCE.getPlayerData().getAttackTarget())
 			return false;
 		else if(entityIn.isInvisible() || !entityIn.isAlive() || entityIn == Minecraft.getInstance().player.getRidingEntity())
 			return false;
@@ -24,10 +27,10 @@ public class TargetIndicator extends EntityIndicator {
 			return false;
 		else if (entityIn instanceof PlayerEntity) {
 			PlayerEntity playerIn = (PlayerEntity) entityIn;
-			if(playerIn.isSpectator())
+			if(playerIn.isSpectator()) {
 				return false;
+			}
 		}
-		
 		return true;
 	}
 	

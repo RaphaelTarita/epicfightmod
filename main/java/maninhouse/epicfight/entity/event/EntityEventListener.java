@@ -8,64 +8,52 @@ import com.google.common.collect.Multimap;
 
 import maninhouse.epicfight.capabilities.entity.player.PlayerData;
 
-public class EntityEventListener
-{
-	private Multimap<Event, PlayerEvent> map;
+public class EntityEventListener {
+	private Multimap<EventType, PlayerEvent> map;
 	private final PlayerData<?> player;
 	
-	public EntityEventListener(PlayerData<?> player)
-	{
+	public EntityEventListener(PlayerData<?> player) {
 		this.player = player;
 		this.map = HashMultimap.create();
 	}
-	
-	public void addEventListener(Event event, PlayerEvent function)
-	{
+
+	public void addEventListener(EventType event, PlayerEvent function) {
 		map.put(event, function);
 	}
-	
-	public void removeListener(Event event, UUID functionUUID)
-	{
+
+	public void removeListener(EventType event, UUID functionUUID) {
 		Collection<PlayerEvent> c = map.get(event);
 		PlayerEvent wantToRemove = null;
-		
-		for(PlayerEvent e : c)
-		{
-			if(e.is(functionUUID))
-			{
+
+		for (PlayerEvent e : c) {
+			if (e.is(functionUUID)) {
 				wantToRemove = e;
 				break;
 			}
 		}
 		
-		if(wantToRemove!=null)
+		if(wantToRemove!=null) {
 			c.remove(wantToRemove);
+		}
 	}
 	
-	public boolean activateEvents(Event event) {
+	public boolean activateEvents(EventType event, Object... args) {
 		boolean cancel = false;
 		for(PlayerEvent function : map.get(event)) {
 			if(event.isRemote == this.player.isRemote()) {
-				cancel |= function.doIt(this.player);
+				cancel |= function.doIt(this.player, args);
 			}
-		}	
+		}
 		
 		return cancel;
 	}
 	
-	public enum Event
-	{
-		ON_ACTION_SERVER_EVENT(false), ON_ATTACK_CLIENT_EVENT(true);
+	public enum EventType {
+		ON_ACTION_EVENT(false), ON_ATTACK_END_EVENT(false);
 		boolean isRemote;
 		
-		Event(boolean isRemote)
-		{
+		EventType(boolean isRemote) {
 			this.isRemote = isRemote;
-		}
-		
-		public boolean getDist()
-		{
-			return isRemote;
 		}
 	}
 }

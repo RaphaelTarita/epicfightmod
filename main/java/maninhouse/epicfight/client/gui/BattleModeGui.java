@@ -213,7 +213,7 @@ public class BattleModeGui extends ModIngameGui {
 			        tessellator.draw();
 			        
 			        if(isCompatibleWeapon) {
-			        	GlStateManager.color4f(0.2F, 1.0F, 1.0F, 1.0F);
+			        	GlStateManager.color4f(0.08F, 0.89F, 0.95F, 1.0F);
 					} else {
 						GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 					}

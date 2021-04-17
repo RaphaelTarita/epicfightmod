@@ -114,7 +114,8 @@ public class ControllEngine {
 		if (action == 1) {
 			if (ClientEngine.INSTANCE.isBattleMode()) {
 				this.setKeyBind(gameSettings.keyBindAttack, false);
-				gameSettings.keyBindAttack.isPressed();
+				while(gameSettings.keyBindAttack.isPressed()) {
+				}
 
 				if (player.getItemInUseCount() == 0) {
 					if (!mouseLeftPressToggle) {
@@ -125,7 +126,8 @@ public class ControllEngine {
 		}
 
 		if (player.getCooledAttackStrength(0) < 0.9F) {
-			gameSettings.keyBindAttack.isPressed();
+			while(gameSettings.keyBindAttack.isPressed()) {
+			}
 		}
 	}
 	
@@ -147,7 +149,7 @@ public class ControllEngine {
 	private void swapHandKeyPressed(int key, int action) {
 		CapabilityItem cap = this.playerdata.getHeldItemCapability(Hand.MAIN_HAND);
 
-		if (playerdata.isInaction() || (cap != null && !cap.canUsedOffhand())) {
+		if (this.playerdata.isInaction() || (cap != null && !cap.canUsedInOffhand())) {
 			while (gameSettings.keyBindSwapHands.isPressed()) {
 			}
 			this.setKeyBind(gameSettings.keyBindSwapHands, false);
@@ -166,52 +168,51 @@ public class ControllEngine {
 
 		EntityState playerState = this.playerdata.getEntityState();
 
-		if (mouseLeftPressToggle) {
+		if (this.mouseLeftPressToggle) {
 			if (!this.isKeyDown(gameSettings.keyBindAttack)) {
-				lightPress = true;
-				mouseLeftPressToggle = false;
-				mouseLeftPressCounter = 0;
+				this.lightPress = true;
+				this.mouseLeftPressToggle = false;
+				this.mouseLeftPressCounter = 0;
 			} else {
-				if (mouseLeftPressCounter > EpicFightMod.INGAME_CONFIG.longPressCount.getValue()) {
+				if (this.mouseLeftPressCounter > EpicFightMod.CLIENT_INGAME_CONFIG.longPressCount.getValue()) {
 					if (this.playerCanExecuteSkill(playerState)) {
 						CapabilityItem itemCap = playerdata.getHeldItemCapability(Hand.MAIN_HAND);
 						if(itemCap != null) {
 							this.playerdata.getSkill(SkillSlot.WEAPON_SPECIAL_ATTACK).execute(this.playerdata);
 						}
 					} else {
-						if (!player.isSpectator()) {
+						if (!this.player.isSpectator()) {
 							this.reserveSkill(SkillSlot.WEAPON_SPECIAL_ATTACK);
 						}
 					}
 					
-					mouseLeftPressToggle = false;
-					mouseLeftPressCounter = 0;
+					this.mouseLeftPressToggle = false;
+					this.mouseLeftPressCounter = 0;
 					this.resetAttackCounter();
 				} else {
-					this.setKeyBind(gameSettings.keyBindAttack, false);
-					mouseLeftPressCounter++;
+					this.setKeyBind(this.gameSettings.keyBindAttack, false);
+					this.mouseLeftPressCounter++;
 				}
 			}
 		}
 		
 		if (this.lightPress) {
 			if (this.playerCanAct(playerState)) {
-				playAttackMotion(player.getHeldItemMainhand(), player.isSprinting());
-				player.resetCooldown();
-				lightPress = false;
+				playAttackMotion(this.player.getHeldItemMainhand(), this.player.isSprinting());
+				this.player.resetCooldown();
+				this.lightPress = false;
 			} else {
-				if (player.isSpectator() || playerState.getLevel() < 2) {
+				if (this.player.isSpectator() || playerState.getLevel() < 2) {
 					lightPress = false;
 				}
 			}
 			
-			lightPress = false;
-			mouseLeftPressToggle = false;
-			mouseLeftPressCounter = 0;
+			this.mouseLeftPressToggle = false;
+			this.mouseLeftPressCounter = 0;
 		}
 
-		if (sneakPressToggle) {
-			if (!this.isKeyDown(gameSettings.keyBindSneak)) {
+		if (this.sneakPressToggle) {
+			if (!this.isKeyDown(this.gameSettings.keyBindSneak)) {
 				SkillContainer skill = this.playerdata.getSkill(SkillSlot.DODGE);
 				
 				if(skill.canExecute(this.playerdata) && skill.getContaining().isExecutableState(this.playerdata)) {
@@ -223,7 +224,7 @@ public class ControllEngine {
 				sneakPressToggle = false;
 				sneakPressCounter = 0;
 			} else {
-				if (sneakPressCounter > EpicFightMod.INGAME_CONFIG.longPressCount.getValue()) {
+				if (sneakPressCounter > EpicFightMod.CLIENT_INGAME_CONFIG.longPressCount.getValue()) {
 					sneakPressToggle = false;
 					sneakPressCounter = 0;
 				} else {
@@ -281,8 +282,7 @@ public class ControllEngine {
 				comboCounter += 1;
 				comboCounter %= cap.getMountAttackMotion().size();
 			}
-		}
-		else {
+		} else {
 			List<StaticAnimation> combo = null;
 			
 			if(combo == null) {

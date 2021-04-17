@@ -26,7 +26,6 @@ import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.scoreboard.Team;
@@ -47,7 +46,7 @@ public abstract class ArmatureRenderer<E extends LivingEntity, T extends LivingD
 		this.layers = Lists.newArrayList();
 	}
 	
-	public void render(E entityIn, T entitydata, EntityRenderer<? extends Entity> renderer, IRenderTypeBuffer buffer, MatrixStack matStack, int packedLightIn, float partialTicks) {
+	public void render(E entityIn, T entitydata, EntityRenderer<E> renderer, IRenderTypeBuffer buffer, MatrixStack matStack, int packedLightIn, float partialTicks) {
 		if(this.shouldRenderNameTag(entitydata, entityIn)) {
 			RenderNameplateEvent renderNameplateEvent = new RenderNameplateEvent(entityIn, entityIn.getDisplayName(), renderer, matStack, buffer, packedLightIn, partialTicks);
 		    MinecraftForge.EVENT_BUS.post(renderNameplateEvent);

@@ -15,8 +15,11 @@ import maninhouse.epicfight.client.model.custom.CustomModelBakery;
 import maninhouse.epicfight.client.renderer.ModRenderTypes;
 import maninhouse.epicfight.main.EpicFightMod;
 import maninhouse.epicfight.utils.math.VisibleMatrix4f;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.client.renderer.entity.layers.BipedArmorLayer;
+import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -86,13 +89,24 @@ public class WearableItemLayer<E extends LivingEntity, T extends LivingData<E>> 
 		matrixStackIn.pop();
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private ClientModel getArmorModel(E entityliving, ArmorItem armorItem, ItemStack stack) {
 		ResourceLocation registryName = armorItem.getRegistryName();
 		if (ARMOR_MODEL_MAP.containsKey(registryName)) {
 			return ARMOR_MODEL_MAP.get(registryName);
 		} else {
+			BipedModel<E> originalModel = new BipedModel<>(0.5F);
 			ClientModel model;
-			BipedModel<E> customModel = armorItem.getArmorModel(entityliving, stack, slot, null);
+			LivingRenderer<E, ?> entityRenderer = (LivingRenderer<E, ?>)Minecraft.getInstance().getRenderManager().getRenderer(entityliving);
+			
+			for (LayerRenderer<E, ?> layer : entityRenderer.layerRenderers) {
+				if (layer instanceof BipedArmorLayer) {
+					originalModel = ((BipedArmorLayer) layer).func_241736_a_(this.slot);
+				}
+			}
+			
+			BipedModel<E> customModel = armorItem.getArmorModel(entityliving, stack, slot, originalModel);
+			
 			if (customModel == null) {
 				ArmorCapability cap = (ArmorCapability) stack.getCapability(ModCapabilities.CAPABILITY_ITEM, null).orElse(null);
 				

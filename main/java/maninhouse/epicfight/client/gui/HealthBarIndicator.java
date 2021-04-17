@@ -27,7 +27,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class HealthBarIndicator extends EntityIndicator {
 	@Override
 	public boolean shouldDraw(LivingEntity entityIn) {
-		if (!EpicFightMod.INGAME_CONFIG.showHealthIndicator.getValue()) {
+		if (!EpicFightMod.CLIENT_INGAME_CONFIG.showHealthIndicator.getValue()) {
 			return false;
 		} else if (!entityIn.isNonBoss() || entityIn.isInvisible() || entityIn == Minecraft.getInstance().player.getRidingEntity()) {
 			return false;

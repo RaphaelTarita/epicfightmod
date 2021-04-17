@@ -15,6 +15,7 @@ import maninhouse.epicfight.gamedata.Animations;
 import maninhouse.epicfight.gamedata.Colliders;
 import maninhouse.epicfight.gamedata.Models;
 import maninhouse.epicfight.gamedata.Sounds;
+import maninhouse.epicfight.main.EpicFightMod;
 import maninhouse.epicfight.model.Model;
 import maninhouse.epicfight.network.ModNetworkManager;
 import maninhouse.epicfight.network.server.STCPlayAnimation;
@@ -26,13 +27,14 @@ import maninhouse.epicfight.utils.game.IExtendedDamageSource.DamageType;
 import maninhouse.epicfight.utils.game.IExtendedDamageSource.StunType;
 import maninhouse.epicfight.utils.math.MathUtils;
 import maninhouse.epicfight.utils.math.VisibleMatrix4f;
+import net.minecraft.client.Minecraft;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MoverType;
-import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -67,13 +69,9 @@ public abstract class LivingData<T extends LivingEntity> extends CapabilityEntit
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(T entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			this.initAttributes();
-			return true;
-		} else {
-			return false;
-		}
+	public void onEntityJoinWorld(T entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		this.initAttributes();
 	}
 	
 	protected abstract void initAnimator(AnimatorClient animatorClient);
@@ -81,10 +79,10 @@ public abstract class LivingData<T extends LivingEntity> extends CapabilityEntit
 	public abstract <M extends Model> M getEntityModel(Models<M> modelDB);
 	
 	protected void initAttributes() {
-		this.orgEntity.getAttribute(ModAttributes.WEIGHT.get()).setBaseValue(this.orgEntity.getMaxHealth() * 2.0D);
-		this.orgEntity.getAttribute(ModAttributes.HIT_AT_ONCE.get()).setBaseValue(1.0D);
-		this.orgEntity.getAttribute(ModAttributes.IGNORE_DEFENCE.get()).setBaseValue(0.0D);
-		this.orgEntity.getAttribute(ModAttributes.IMPACT.get()).setBaseValue(1.0D);
+		this.orgEntity.getAttribute(ModAttributes.WEIGHT.get()).setBaseValue(this.orgEntity.getAttribute(Attributes.MAX_HEALTH).getBaseValue() * 2.0D);
+		this.orgEntity.getAttribute(ModAttributes.MAX_STRIKES.get()).setBaseValue(1.0D);
+		this.orgEntity.getAttribute(ModAttributes.ARMOR_NEGATION.get()).setBaseValue(0.0D);
+		this.orgEntity.getAttribute(ModAttributes.IMPACT.get()).setBaseValue(0.5D);
 	}
 	
 	@Override
@@ -193,22 +191,22 @@ public abstract class LivingData<T extends LivingEntity> extends CapabilityEntit
 		} else {
 			damage = (float) orgEntity.getAttributeValue(ModAttributes.OFFHAND_ATTACK_DAMAGE.get());
 		}
-
+		
 		float bonus;
 		if (targetEntity instanceof LivingEntity) {
-			bonus = EnchantmentHelper.getModifierForCreature(orgEntity.getHeldItem(hand), ((LivingEntity) targetEntity).getCreatureAttribute());
+			bonus = EnchantmentHelper.getModifierForCreature(this.orgEntity.getHeldItem(hand), ((LivingEntity) targetEntity).getCreatureAttribute());
 		} else {
-			bonus = EnchantmentHelper.getModifierForCreature(orgEntity.getHeldItem(hand), CreatureAttribute.UNDEFINED);
+			bonus = EnchantmentHelper.getModifierForCreature(this.orgEntity.getHeldItem(hand), CreatureAttribute.UNDEFINED);
 		}
-
+		
 		return damage + bonus;
 	}
 	
-	public boolean hurtEntity(Entity hitTarget, IExtendedDamageSource source, float amount) {
+	public boolean hurtEntity(Entity hitTarget, Hand handIn, IExtendedDamageSource source, float amount) {
 		boolean succed = hitTarget.attackEntityFrom((DamageSource) source, amount);
-
+		
 		if (succed) {
-			int j = EnchantmentHelper.getFireAspectModifier(this.orgEntity);
+			int j = EnchantmentHelper.getEnchantmentLevel(Enchantments.FIRE_ASPECT, this.orgEntity.getHeldItem(handIn));
 			if (hitTarget instanceof LivingEntity) {
 				if (j > 0 && !hitTarget.isBurning())
 					hitTarget.setFire(j * 4);
@@ -270,7 +268,7 @@ public abstract class LivingData<T extends LivingEntity> extends CapabilityEntit
 	}
 	
 	public float getStunArmor() {
-		return getMaxStunArmor() == 0 ? 0 : MathHelper.clamp(this.orgEntity.getDataManager().get(DataKeys.STUN_ARMOR).floatValue(), 0.0F, getMaxStunArmor());
+		return getMaxStunArmor() == 0 ? 0 : this.orgEntity.getDataManager().get(DataKeys.STUN_ARMOR).floatValue();
 	}
 	
 	public void setStunArmor(float value) {
@@ -321,20 +319,6 @@ public abstract class LivingData<T extends LivingEntity> extends CapabilityEntit
     	rotateTo(degree, limit, partialSync);
 	}
 	
-	public void moveForward(float forward) {
-		LivingEntity entity = this.getOriginalEntity();
-		float x = -forward * MathHelper.sin(entity.rotationYaw * 0.017453292F);
-        float z = forward * MathHelper.cos(entity.rotationYaw * 0.017453292F);
-        entity.move(MoverType.SELF, new Vector3d(x, 0, z));
-	}
-	
-	public void move(float horizontal, float vertical) {
-		LivingEntity entity = this.getOriginalEntity();
-		float x = -horizontal * MathHelper.sin(entity.rotationYaw * 0.017453292F);
-        float z = horizontal * MathHelper.cos(entity.rotationYaw * 0.017453292F);
-        entity.move(MoverType.SELF, new Vector3d(x, vertical, z));
-	}
-	
 	public void playSound(SoundEvent sound, float minPitch, float maxPitch) {
 		float randPitch = this.orgEntity.getRNG().nextFloat() * 2.0F - 1.0F;
 		randPitch = Math.min(Math.max(randPitch, minPitch), maxPitch);
@@ -347,6 +331,14 @@ public abstract class LivingData<T extends LivingEntity> extends CapabilityEntit
 	
 	public LivingEntity getAttackTarget() {
 		return this.orgEntity.getLastAttackedEntity();
+	}
+	
+	public float getAttackDirectionPitch() {
+		float partialTicks = EpicFightMod.isPhysicalClient() ? Minecraft.getInstance().getRenderPartialTicks() : 1.0F;
+		float pitch = -this.getOriginalEntity().getPitch(partialTicks);
+		float correct = (pitch > 0) ? 0.03333F * (float)Math.pow(pitch, 2) : -0.03333F * (float)Math.pow(pitch, 2);
+		
+		return MathHelper.clamp(correct, -30.0F, 30.0F);
 	}
 	
 	public VisibleMatrix4f getHeadMatrix(float partialTicks) {
@@ -369,7 +361,7 @@ public abstract class LivingData<T extends LivingEntity> extends CapabilityEntit
 				}
 			}
 		}
-        
+		
 		return MathUtils.getModelMatrixIntegrated(0, 0, 0, 0, 0, 0, orgEntity.prevRotationPitch, orgEntity.rotationPitch, f2, f2, partialTicks, 1, 1, 1);
 	}
 	
@@ -404,7 +396,12 @@ public abstract class LivingData<T extends LivingEntity> extends CapabilityEntit
 		this.currentMixMotion = LivingMotion.NONE;
 		this.getClientAnimator().resetMixMotion();
 	}
-
+	
+	public void reserverAnimationSynchronize(StaticAnimation animation) {
+		this.animator.reserveAnimation(animation);
+		ModNetworkManager.sendToAllPlayerTrackingThisEntity(new STCPlayAnimation(animation.getId(), this.orgEntity.getEntityId(), 0.0F), this.orgEntity);
+	}
+	
 	public void playAnimationSynchronize(int id, float modifyTime) {
 		this.animator.playAnimation(id, modifyTime);
 		ModNetworkManager.sendToAllPlayerTrackingThisEntity(new STCPlayAnimation(id, this.orgEntity.getEntityId(), modifyTime), this.orgEntity);
@@ -497,11 +494,11 @@ public abstract class LivingData<T extends LivingEntity> extends CapabilityEntit
 	}
 
 	public int getHitEnemies() {
-		return (int) this.orgEntity.getAttributeValue(ModAttributes.HIT_AT_ONCE.get());
+		return (int) this.orgEntity.getAttributeValue(ModAttributes.MAX_STRIKES.get());
 	}
 
-	public float getDefenceIgnore() {
-		return (float) this.orgEntity.getAttributeValue(ModAttributes.IGNORE_DEFENCE.get());
+	public float getArmorNegation() {
+		return (float) this.orgEntity.getAttributeValue(ModAttributes.ARMOR_NEGATION.get());
 	}
 
 	public float getImpact() {

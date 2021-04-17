@@ -20,8 +20,8 @@ public abstract class CapabilityEntity<T extends Entity> {
 		this.orgEntity = entityIn;
 	}
 
-	public boolean onEntityJoinWorld(T entityIn) {
-		return this.orgEntity == entityIn;
+	public void onEntityJoinWorld(T entityIn) {
+		
 	}
 
 	public T getOriginalEntity() {

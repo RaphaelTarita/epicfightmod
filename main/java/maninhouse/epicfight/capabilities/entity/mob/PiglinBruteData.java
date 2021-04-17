@@ -22,14 +22,11 @@ public class PiglinBruteData extends BipedMobData<PiglinBruteEntity> {
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(PiglinBruteEntity entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(8.0F));
-			BrainRemodeler.replaceTask(this.orgEntity.getBrain(), Activity.FIGHT, 12, AttackTargetTask.class, new AttackWithPatternTask(this, MobAttackPatterns.BIPED_ARMED_ONEHAND, 0.0D, 2.0D));
-			return true;
-		} else {
-			return false;
-		}
+	public void onEntityJoinWorld(PiglinBruteEntity entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(8.0F));
+		BrainRemodeler.replaceTask(this.orgEntity.getBrain(), Activity.FIGHT, 12, AttackTargetTask.class,
+				new AttackWithPatternTask(this, MobAttackPatterns.BIPED_ARMED_ONEHAND, 0.0D, 2.0D));
 	}
 	
 	@Override

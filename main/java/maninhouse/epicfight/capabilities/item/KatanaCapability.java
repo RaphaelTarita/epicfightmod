@@ -1,11 +1,11 @@
 package maninhouse.epicfight.capabilities.item;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import maninhouse.epicfight.animation.LivingMotion;
 import maninhouse.epicfight.animation.types.StaticAnimation;
+import maninhouse.epicfight.capabilities.entity.LivingData;
 import maninhouse.epicfight.capabilities.entity.player.PlayerData;
 import maninhouse.epicfight.gamedata.Animations;
 import maninhouse.epicfight.gamedata.Colliders;
@@ -17,15 +17,13 @@ public class KatanaCapability extends ModWeaponCapability {
 	private Map<LivingMotion, StaticAnimation> sheathedMotions;
 	
 	public KatanaCapability() {
-		super(WeaponCategory.KATANA, (playerdata)->Skills.FATAL_DRAW, Skills.KATANA_GIMMICK, Sounds.WHOOSH, Sounds.BLADE_HIT, Colliders.katana, 0.0D, 0.6D, 1, true, true);
-		this.setTwoHandStyleAttribute(0.0D, 0.6D, 1);
-		this.addAutoAttackCombos(Animations.KATANA_SHEATHING_AUTO);
-		this.addAutoAttackCombos(Animations.KATANA_SHEATHING_DASH);
-		this.addTwohandAutoAttackCombos(Animations.KATANA_AUTO_1);
-		this.addTwohandAutoAttackCombos(Animations.KATANA_AUTO_2);
-		this.addTwohandAutoAttackCombos(Animations.KATANA_AUTO_3);
-		this.addTwohandAutoAttackCombos(Animations.SWORD_DASH);
-		this.addMountAttackCombos(Animations.SWORD_MOUNT_ATTACK);
+		super(WeaponCategory.KATANA, (playerdata)->WieldStyle.TWO_HAND, Skills.KATANA_GIMMICK, Sounds.WHOOSH, Sounds.BLADE_HIT, Colliders.katana, HandProperty.TWO_HANDED);
+		this.addStyleAttributeSimple(WieldStyle.TWO_HAND, 0.0D, 0.6D, 1);
+		this.addStyleCombo(WieldStyle.SHEATH, Animations.KATANA_SHEATHING_AUTO, Animations.KATANA_SHEATHING_DASH);
+		this.addStyleCombo(WieldStyle.TWO_HAND, Animations.KATANA_AUTO_1, Animations.KATANA_AUTO_2, Animations.KATANA_AUTO_3, Animations.SWORD_DASH);
+		this.addStyleCombo(WieldStyle.MOUNT, Animations.SWORD_MOUNT_ATTACK);
+		this.addStyleSpecialAttack(WieldStyle.SHEATH, Skills.FATAL_DRAW);
+		this.addStyleSpecialAttack(WieldStyle.TWO_HAND, Skills.FATAL_DRAW);
     	this.addLivingMotionChanger(LivingMotion.IDLE, Animations.BIPED_IDLE_UNSHEATHING);
     	this.addLivingMotionChanger(LivingMotion.WALKING, Animations.BIPED_WALK_UNSHEATHING);
     	this.addLivingMotionChanger(LivingMotion.RUNNING, Animations.BIPED_RUN_UNSHEATHING);
@@ -39,11 +37,16 @@ public class KatanaCapability extends ModWeaponCapability {
 	}
 	
 	@Override
-	public List<StaticAnimation> getAutoAttckMotion(PlayerData<?> playerdata) {
-		if(playerdata.getSkill(SkillSlot.WEAPON_GIMMICK).getVariableNBT().getBoolean("sheath")) {
-			return autoAttackMotions;
+	public WieldStyle getStyle(LivingData<?> entitydata) {
+		if (entitydata instanceof PlayerData) {
+			PlayerData<?> playerdata = (PlayerData<?>)entitydata;
+			if (playerdata.getSkill(SkillSlot.WEAPON_GIMMICK).getVariableNBT().getBoolean("sheath")) {
+				return WieldStyle.SHEATH;
+			} else {
+				return WieldStyle.TWO_HAND;
+			}
 		} else {
-			return super.autoAttackTwohandMotions;
+			return WieldStyle.TWO_HAND;
 		}
 	}
 	

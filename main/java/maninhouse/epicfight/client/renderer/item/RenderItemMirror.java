@@ -20,15 +20,17 @@ public abstract class RenderItemMirror extends RenderItemBase {
 	protected VisibleMatrix4f leftHandCorrectionMatrix;
 	
 	@Override
-	public void renderItemInHand(ItemStack stack, LivingData<?> itemHolder, Hand hand, IRenderTypeBuffer buffer, MatrixStack viewMatrixStack, int packedLight) {
+	public void renderItemInHand(ItemStack stack, LivingData<?> itemHolder, Hand hand, IRenderTypeBuffer buffer, MatrixStack matrixStackIn, int packedLight) {
 		VisibleMatrix4f modelMatrix = new VisibleMatrix4f(hand == Hand.OFF_HAND ? leftHandCorrectionMatrix : correctionMatrix);
 		String heldingHand = hand == Hand.MAIN_HAND ? "Tool_R" : "Tool_L";
 		VisibleMatrix4f.mul(itemHolder.getEntityModel(ClientModels.LOGICAL_CLIENT).getArmature().findJointByName(heldingHand).getAnimatedTransform(), modelMatrix, modelMatrix);
 		VisibleMatrix4f transpose = VisibleMatrix4f.transpose(modelMatrix, null);
 		
-		MathUtils.translateStack(viewMatrixStack, modelMatrix);
-		MathUtils.rotateStack(viewMatrixStack, transpose);
+		matrixStackIn.push();
+		MathUtils.translateStack(matrixStackIn, modelMatrix);
+		MathUtils.rotateStack(matrixStackIn, transpose);
 		
-        Minecraft.getInstance().getItemRenderer().renderItem(stack, ItemCameraTransforms.TransformType.THIRD_PERSON_RIGHT_HAND, packedLight, OverlayTexture.NO_OVERLAY, viewMatrixStack, buffer);
+        Minecraft.getInstance().getItemRenderer().renderItem(stack, ItemCameraTransforms.TransformType.THIRD_PERSON_RIGHT_HAND, packedLight, OverlayTexture.NO_OVERLAY, matrixStackIn, buffer);
+        matrixStackIn.pop();
 	}
 }

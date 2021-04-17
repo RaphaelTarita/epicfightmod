@@ -27,16 +27,13 @@ public class PiglinData extends BipedMobData<PiglinEntity> {
 	}
 	
 	@Override
-	public boolean onEntityJoinWorld(PiglinEntity entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			BrainRemodeler.replaceTask(this.orgEntity.getBrain(), Activity.FIGHT, 13, AttackTargetTask.class, new AttackWithPatternTask(this, MobAttackPatterns.BIPED_ARMED_ONEHAND, 0.0D, 2.0D));
-			BrainRemodeler.replaceTask(this.orgEntity.getBrain(), Activity.FIGHT, 14, ShootTargetTask.class, new CrossBowAttackTask<>());
-			BrainRemodeler.removeTask(this.orgEntity.getBrain(), Activity.CELEBRATE, 15, FirstShuffledTask.class);
-			this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(0.0F));
-			return true;
-		} else {
-			return false;
-		}
+	public void onEntityJoinWorld(PiglinEntity entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		BrainRemodeler.replaceTask(this.orgEntity.getBrain(), Activity.FIGHT, 13, AttackTargetTask.class,
+				new AttackWithPatternTask(this, MobAttackPatterns.BIPED_ARMED_ONEHAND, 0.0D, 2.0D));
+		BrainRemodeler.replaceTask(this.orgEntity.getBrain(), Activity.FIGHT, 14, ShootTargetTask.class, new CrossBowAttackTask<>());
+		BrainRemodeler.removeTask(this.orgEntity.getBrain(), Activity.CELEBRATE, 15, FirstShuffledTask.class);
+		this.orgEntity.getDataManager().register(DataKeys.STUN_ARMOR, Float.valueOf(0.0F));
 	}
 	
 	@Override

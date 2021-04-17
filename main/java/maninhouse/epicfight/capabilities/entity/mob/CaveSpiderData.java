@@ -10,6 +10,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.monster.CaveSpiderEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
+import net.minecraft.util.Hand;
 import net.minecraft.world.Difficulty;
 
 public class CaveSpiderData extends SpiderData<CaveSpiderEntity>
@@ -24,9 +25,9 @@ public class CaveSpiderData extends SpiderData<CaveSpiderEntity>
 	}
 	
 	@Override
-	public boolean hurtEntity(Entity hitTarget, IExtendedDamageSource source, float amount)
+	public boolean hurtEntity(Entity hitTarget, Hand handIn, IExtendedDamageSource source, float amount)
 	{
-		boolean succed = super.hurtEntity(hitTarget, source, amount);
+		boolean succed = super.hurtEntity(hitTarget, handIn, source, amount);
 		
 		if(succed && hitTarget instanceof LivingEntity)
         {

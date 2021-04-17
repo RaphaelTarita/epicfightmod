@@ -3,12 +3,10 @@ package maninhouse.epicfight.animation;
 import maninhouse.epicfight.utils.math.VisibleMatrix4f;
 import maninhouse.epicfight.utils.math.Vec3f;
 
-public class Quaternion
-{
+public class Quaternion {
 	private float x, y, z, w;
-	
-	public Quaternion(float x, float y, float z, float w)
-	{
+
+	public Quaternion(float x, float y, float z, float w) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -16,17 +14,15 @@ public class Quaternion
 		normalize();
 	}
 
-	public void normalize()
-	{
+	public void normalize() {
 		float mag = (float) Math.sqrt(w * w + x * x + y * y + z * z);
 		w /= mag;
 		x /= mag;
 		y /= mag;
 		z /= mag;
 	}
-	
-	public VisibleMatrix4f toRotationMatrix()
-	{
+
+	public VisibleMatrix4f toRotationMatrix() {
 		VisibleMatrix4f matrix = new VisibleMatrix4f();
 		final float xy = x * y;
 		final float xz = x * z;
@@ -48,37 +44,29 @@ public class Quaternion
 		matrix.m22 = 1.0F - xSquared - ySquared;
 		return matrix;
 	}
-	
-	public static Quaternion fromMatrix(VisibleMatrix4f matrix)
-	{
+
+	public static Quaternion fromMatrix(VisibleMatrix4f matrix) {
 		float w, x, y, z;
 		float diagonal = matrix.m00 + matrix.m11 + matrix.m22;
-		if(diagonal > 0)
-		{
+		if (diagonal > 0) {
 			float w4 = (float) (Math.sqrt(diagonal + 1f) * 2f);
 			w = w4 / 4f;
 			x = (matrix.m21 - matrix.m12) / w4;
 			y = (matrix.m02 - matrix.m20) / w4;
 			z = (matrix.m10 - matrix.m01) / w4;
-		}
-		else if((matrix.m00 > matrix.m11) && (matrix.m00 > matrix.m22))
-		{
+		} else if ((matrix.m00 > matrix.m11) && (matrix.m00 > matrix.m22)) {
 			float x4 = (float) (Math.sqrt(1f + matrix.m00 - matrix.m11 - matrix.m22) * 2f);
 			w = (matrix.m21 - matrix.m12) / x4;
 			x = x4 / 4f;
 			y = (matrix.m01 + matrix.m10) / x4;
 			z = (matrix.m02 + matrix.m20) / x4;
-		}
-		else if(matrix.m11 > matrix.m22)
-		{
+		} else if (matrix.m11 > matrix.m22) {
 			float y4 = (float) (Math.sqrt(1f + matrix.m11 - matrix.m00 - matrix.m22) * 2f);
 			w = (matrix.m02 - matrix.m20) / y4;
 			x = (matrix.m01 + matrix.m10) / y4;
 			y = y4 / 4f;
 			z = (matrix.m12 + matrix.m21) / y4;
-		}
-		else
-		{
+		} else {
 			float z4 = (float) (Math.sqrt(1f + matrix.m22 - matrix.m00 - matrix.m11) * 2f);
 			w = (matrix.m10 - matrix.m01) / z4;
 			x = (matrix.m02 + matrix.m20) / z4;
@@ -87,22 +75,18 @@ public class Quaternion
 		}
 		return new Quaternion(x, y, z, w);
 	}
-	
-	public static Quaternion interpolate(Quaternion a, Quaternion b, float blend)
-	{
+
+	public static Quaternion interpolate(Quaternion a, Quaternion b, float blend) {
 		Quaternion result = new Quaternion(0, 0, 0, 1);
 		float dot = a.w * b.w + a.x * b.x + a.y * b.y + a.z * b.z;
 		float blendI = 1f - blend;
-		
-		if (dot < 0)
-		{
+
+		if (dot < 0) {
 			result.w = blendI * a.w + blend * -b.w;
 			result.x = blendI * a.x + blend * -b.x;
 			result.y = blendI * a.y + blend * -b.y;
 			result.z = blendI * a.z + blend * -b.z;
-		}
-		else
-		{
+		} else {
 			result.w = blendI * a.w + blend * b.w;
 			result.x = blendI * a.x + blend * b.x;
 			result.y = blendI * a.y + blend * b.y;
@@ -112,10 +96,15 @@ public class Quaternion
 		result.normalize();
 		return result;
 	}
-	
-	public static Quaternion rotate(float degree, Vec3f axis, Quaternion src)
-	{
-		VisibleMatrix4f quatmat = src.toRotationMatrix();
+
+	public static Quaternion rotate(float degree, Vec3f axis, Quaternion src) {
+		VisibleMatrix4f quatmat;
+		if (src == null) {
+			quatmat = new VisibleMatrix4f();
+		} else {
+			quatmat = src.toRotationMatrix();
+		}
+		
 		VisibleMatrix4f rotMat = new VisibleMatrix4f();
 		VisibleMatrix4f.rotate(degree, axis, rotMat, rotMat);
 		VisibleMatrix4f.mul(quatmat, rotMat,  quatmat);
@@ -123,8 +112,7 @@ public class Quaternion
 	}
 	
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return String.format("%f %f %f %f", this.w, this.x, this.y, this.z);
 	}
 }

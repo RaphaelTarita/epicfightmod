@@ -9,8 +9,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class SkillContainer
-{
+public class SkillContainer {
 	protected Skill containingSkill;
 	protected PlayerData<?> executer;
 	protected int prevDuration = 0;
@@ -21,109 +20,95 @@ public class SkillContainer
 	protected boolean consumeDuration;
 	protected int stack;
 	protected CompoundNBT skillVariables;
-	
-	public SkillContainer(PlayerData<?> executer)
-	{
+
+	public SkillContainer(PlayerData<?> executer) {
 		this.executer = executer;
 		this.skillVariables = new CompoundNBT();
 	}
-	
-	public void setExecuter(PlayerData<?> executer)
-	{
+
+	public void setExecuter(PlayerData<?> executer) {
 		this.executer = executer;
 	}
-	
-	public SkillContainer setSkill(Skill skill)
-	{
-		if(this.containingSkill != null)
+
+	public SkillContainer setSkill(Skill skill) {
+		if(this.containingSkill != null) {
 			this.containingSkill.onDeleted(this);
+		}
 		
 		this.containingSkill = skill;
-		if(skill != null)
+		if(skill != null) {
 			skill.onInitiate(this);
+		}
+		
 		this.reset(false);
 		this.stack = 0;
 		
-		for(String key : this.skillVariables.keySet())
+		for(String key : this.skillVariables.keySet()) {
 			this.skillVariables.remove(key);
+		}
 		
 		return this;
 	}
-	
-	public void reset(boolean consume)
-	{
-		if(consume && this.stack > 0)
+
+	public void reset(boolean consume) {
+		if (consume && this.stack > 0)
 			--this.stack;
 		this.isActivated = false;
 		this.consumeDuration = true;
 		this.prevDuration = 0;
 		this.duration = 0;
-		
-		if(this.getContaining() != null && this.getContaining().maxStackSize <= 1)
-		{
+
+		if (this.getContaining() != null && this.getContaining().maxStackSize <= 1) {
 			this.prevCooldown = 0;
 			this.cooldown = 0;
 			this.containingSkill.onReset(this);
 		}
 	}
 	
-	public boolean isEmpty()
-	{
+	public boolean isEmpty() {
 		return this.containingSkill == null;
 	}
-	
-	public void setCooldown(float value)
-	{
-		if(this.containingSkill != null)
+
+	public void setCooldown(float value) {
+		if(this.containingSkill != null) {
 			 this.containingSkill.setCooldown(this, value);
-		else
-		{
+		} else {
 			this.prevCooldown = 0;
 			this.cooldown = 0;
 		}
 	}
 	
-	public void setDuration(int value)
-	{
-		if(this.containingSkill != null)
-		{
-			if(!this.isActivated && value > 0)
+	public void setDuration(int value) {
+		if (this.containingSkill != null) {
+			if(!this.isActivated && value > 0) {
 				this.isActivated = true;
+			}
 			
 			this.duration = value;
 			this.duration = Math.min(this.containingSkill.duration, Math.max(this.duration, 0));
-		}
-		else
+		} else {
 			this.duration = 0;
+		}
 	}
 	
-	public void setDurationConsume(boolean set)
-	{
+	public void setDurationConsume(boolean set) {
 		this.consumeDuration = set;
 	}
-	//Unused
-	public void setCooldownPercent(float value)
-	{
-		this.setCooldown(this.containingSkill.cooldown * value);
-	}
-	
+
 	@OnlyIn(Dist.CLIENT)
-	public void execute(ClientPlayerData executer)
-	{
-		if(this.canExecute(executer))
+	public void execute(ClientPlayerData executer) {
+		if(this.canExecute(executer)) {
 			this.containingSkill.executeOnClient((ClientPlayerData)executer, this.containingSkill.gatherArguments(executer, ClientEngine.INSTANCE.inputController));
+		}
 	}
 	
 	@OnlyIn(Dist.CLIENT)
-	public void cancel(ClientPlayerData executer, PacketBuffer pb)
-	{
+	public void cancel(ClientPlayerData executer, PacketBuffer pb) {
 		this.containingSkill.cancelOnClient(executer, pb);
 	}
 	
-	public boolean requestExecute(ServerPlayerData executer, PacketBuffer buf)
-	{
-		if(this.canExecute(executer))
-		{
+	public boolean requestExecute(ServerPlayerData executer, PacketBuffer buf) {
+		if (this.canExecute(executer)) {
 			this.containingSkill.execute(this);
 			this.containingSkill.executeOnServer(executer, buf);
 			return true;
@@ -132,63 +117,54 @@ public class SkillContainer
 		return false;
 	}
 	
-	public CompoundNBT getVariableNBT()
-	{
+	public CompoundNBT getVariableNBT() {
 		return this.skillVariables;
 	}
-	
-	public float getRemainCooldown()
-	{
+
+	public float getRemainCooldown() {
 		return this.cooldown;
 	}
-	
-	public int getRemainDuration()
-	{
+
+	public int getRemainDuration() {
 		return this.duration;
 	}
-	
-	public boolean canExecute(PlayerData<?> executer)
-	{
-		if(containingSkill == null)
+
+	public boolean canExecute(PlayerData<?> executer) {
+		if(containingSkill == null) {
 			return false;
-		else
+		} else {
 			return (this.stack > 0 || executer.getOriginalEntity().isCreative()) && containingSkill.canExecute(executer);
+		}
 	}
 	
-	public void update()
-	{
-		if(this.containingSkill != null)
+	public void update() {
+		if(this.containingSkill != null) {
 			this.containingSkill.update(this);
+		}
 	}
-	
-	public int getStack()
-	{
+
+	public int getStack() {
 		return this.stack;
 	}
-	
-	public Skill getContaining()
-	{
+
+	public Skill getContaining() {
 		return this.containingSkill;
 	}
-	
-	public boolean hasSkill(Skill skill)
-	{
+
+	public boolean hasSkill(Skill skill) {
 		return this.containingSkill != null ? this.containingSkill.equals(skill) : false;
 	}
-	
-	public float getCooldownRatio(float partialTicks)
-	{
+
+	public float getCooldownRatio(float partialTicks) {
 		return containingSkill != null && containingSkill.cooldown > 0 ? (prevCooldown + ((cooldown - prevCooldown) *
 				partialTicks)) / containingSkill.cooldown : 0;
 	}
 	
-	public float getCooldownSec()
-	{
+	public float getCooldownSec() {
 		return containingSkill != null ? containingSkill.cooldown - this.cooldown : 0;
 	}
-	
-	public float getDurationRatio(float partialTicks)
-	{
+
+	public float getDurationRatio(float partialTicks) {
 		return containingSkill != null && containingSkill.duration > 0 ? (prevDuration + ((duration - prevDuration) *
 				partialTicks)) / containingSkill.duration : 0;
 	}

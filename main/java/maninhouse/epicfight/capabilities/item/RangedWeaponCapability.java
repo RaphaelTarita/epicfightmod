@@ -14,12 +14,16 @@ public class RangedWeaponCapability extends CapabilityItem {
 	public RangedWeaponCapability(Item item, StaticAnimation reload, StaticAnimation aiming, StaticAnimation shot) {
 		super(item, WeaponCategory.NONE_WEAON);
 		this.rangeAnimationSet = new HashMap<LivingMotion, StaticAnimation> ();
-		if(reload != null)
+		
+		if(reload != null) {
 			this.rangeAnimationSet.put(LivingMotion.RELOADING, reload);
-		if(aiming != null)
+		}
+		if(aiming != null) {
 			this.rangeAnimationSet.put(LivingMotion.AIMING, aiming);
-		if(shot != null)
+		}
+		if(shot != null) {
 			this.rangeAnimationSet.put(LivingMotion.SHOTING, shot);
+		}
 	}
 	
 	@Override

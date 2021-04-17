@@ -19,7 +19,6 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.entity.Entity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
@@ -36,7 +35,7 @@ public class FirstPersonRenderer extends ArmatureRenderer<ClientPlayerEntity, Cl
 	}
 	
 	@Override
-	public void render(ClientPlayerEntity entityIn, ClientPlayerData entitydata, EntityRenderer<? extends Entity> renderer, IRenderTypeBuffer buffer,
+	public void render(ClientPlayerEntity entityIn, ClientPlayerData entitydata, EntityRenderer<ClientPlayerEntity> renderer, IRenderTypeBuffer buffer,
 			MatrixStack matStackIn, int packedLightIn, float partialTicks) {
 		ActiveRenderInfo renderInfo = Minecraft.getInstance().gameRenderer.getActiveRenderInfo();
 		Vector3d projView = renderInfo.getProjectedView();

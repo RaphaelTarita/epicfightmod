@@ -22,17 +22,13 @@ import net.minecraft.entity.monster.ZoglinEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvent;
 
-public class ZoglinData extends MobData<ZoglinEntity>
-{
+public class ZoglinData extends MobData<ZoglinEntity> {
 	@Override
-	public boolean onEntityJoinWorld(ZoglinEntity entityIn) {
-		if(super.onEntityJoinWorld(entityIn)) {
-			BrainRemodeler.replaceTask(this.orgEntity.getBrain(), Activity.FIGHT, 11, SupplementedTask.class, new AttackWithPatternTask(this, MobAttackPatterns.HOGLIN_PATTERN, 0.0D, 4.0D));
-			BrainRemodeler.removeTask(this.orgEntity.getBrain(), Activity.FIGHT, 12, SupplementedTask.class);
-			return true;
-		} else {
-			return false;
-		}
+	public void onEntityJoinWorld(ZoglinEntity entityIn) {
+		super.onEntityJoinWorld(entityIn);
+		BrainRemodeler.replaceTask(this.orgEntity.getBrain(), Activity.FIGHT, 11, SupplementedTask.class,
+				new AttackWithPatternTask(this, MobAttackPatterns.HOGLIN_PATTERN, 0.0D, 4.0D));
+		BrainRemodeler.removeTask(this.orgEntity.getBrain(), Activity.FIGHT, 12, SupplementedTask.class);
 	}
 	
 	@Override
@@ -46,7 +42,7 @@ public class ZoglinData extends MobData<ZoglinEntity>
 	@Override
 	protected void initAttributes() {
 		super.initAttributes();
-		this.orgEntity.getAttribute(ModAttributes.HIT_AT_ONCE.get()).setBaseValue(4.0F);
+		this.orgEntity.getAttribute(ModAttributes.MAX_STRIKES.get()).setBaseValue(4.0F);
 		this.orgEntity.getAttribute(ModAttributes.IMPACT.get()).setBaseValue(5.0F);
 	}
 	
